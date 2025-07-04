@@ -1,0 +1,59 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Lrc Player Test</title>
+    <link rel="stylesheet" href="./LrcPlayer.css" />
+  </head>
+  <body>
+    <audio src="./res/Je-veux-Zaz.mp3" id="song" style="width: 100%" controls></audio>
+    <div class="LP-monitor" id="mon1">
+      <pre></pre>
+    </div>
+    <ul id="LP-lyrics conta"></ul>
+    <audio src="./res/Runaway - Aurora.mp3" id="radio" style="width: 100%" controls></audio>
+    <div class="LP-monitor" id="mon2"></div>
+    <ul id="LP-lyrics texts"></ul>
+
+    <ul id="just-extract"></ul>
+  </body>
+  <script src="./LrcPlayer.js"></script>
+  <script>
+    var lrc = new Lrc("res/Je-veux.lrc", {
+      type: "static-text",
+      audio_selector: "#song",
+      container_selector: "#conta",
+      monitor_selector: "#mon1 pre",
+    });
+
+    var radio = new Lrc("./res/Runaway by Aurora.lrc", {
+      type: "static-text",
+      animation: {
+        animation_type: "normal",
+        animation_parameters: ["up", "center", "linear"],
+      },
+      audio_selector: "#radio",
+      container_selector: "#texts",
+      monitor_selector: "#mon2",
+    });
+
+    var print = new Lrc("./res/Raghs.lrc", {type: "print", container_selector: "#just-extract"});
+
+    // const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract" });
+    // console.log(lrc.getData());
+
+    // (async function () {
+    //   try {
+    //     const extract = new Lrc("./res/Je-veux.lrc", { type: "extract" });
+    //     await extract.init();
+    //     console.log(extract.getData());
+    //   } catch (error) {
+    //     console.error("Error:", error);
+    //   }
+    // })();
+  </script>
+  <script type="module">
+      const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract" });
+      console.log(lrc.getData());
+  </script>
+</html>
