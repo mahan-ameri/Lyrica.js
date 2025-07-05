@@ -5,6 +5,7 @@ class Lrc {
         this.times = [];
         this.lyrics = [];
         this.metadata = {};
+        this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
     }
 
@@ -128,7 +129,7 @@ class Lrc {
     
 
     extractTimeAndText(line) {
-        const timeRegex = /\[(\d{2}):(\d{2})\.(\d{2})\]/g;
+        const timeRegex = /\[(\d+):(\d{2})\.(\d{2})\]/g;
         const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
         const times = [];
         let match, metaMatch;
@@ -172,11 +173,11 @@ class Lrc {
     }
 
     syncLyrics() {
-        const audio = document.querySelector(this.options.audio_selector);
         const monitor = document.querySelector(this.options.monitor_selector);
         let times = this.times
         let lastIndex = [0, 0];
         let interval;
+        let audio = this.audio
 
         audio.addEventListener("play", () => {
             interval = setInterval(() => {
@@ -198,9 +199,9 @@ class Lrc {
             clearInterval(interval)
         })
         function CheckAll(times, lyrics) {
-            let currentTimeMs = audio.currentTime * 1000;
+            let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
-                    if (times[i] <= (currentTimeMs-700)) {
+                    if (times[i] <= (currentTime-700)) {
                         if (i === lastIndex[0] + 1 || i === 0) {
                             monitor.textContent = lyrics[i];
                             lastIndex[0] = i;
@@ -209,6 +210,28 @@ class Lrc {
                         break;
                     }
                 }
+        }
+    }
+
+    searchLyric(time) {
+        let currentTime = this.audio.currentTime * 1000;
+        let times = this.times
+        function findLyric(time) {
+            for (let i = 0; i < times.length; i++) {
+                if (times[i] > (currentTime-700)) {
+                    return times[(i-1)]
+                    break
+                }
+            }
+        }
+
+        const timeRegex = /(\d+):(\d{2})\.(\d{2})/;
+        let match = timeRegex.exec(time)
+        if (!(match)) {
+            return findLyric(time)
+        }else {
+            const [_, min, sec, ms] = match;
+            return findLyric(this.timeToMilliseconds([min, sec, ms]))
         }
     }
 

@@ -39,21 +39,16 @@
 
     var print = new Lrc("./res/Raghs.lrc", {type: "print", container_selector: "#just-extract"});
 
-    // const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract" });
-    // console.log(lrc.getData());
-
-    // (async function () {
-    //   try {
-    //     const extract = new Lrc("./res/Je-veux.lrc", { type: "extract" });
-    //     await extract.init();
-    //     console.log(extract.getData());
-    //   } catch (error) {
-    //     console.error("Error:", error);
-    //   }
-    // })();
   </script>
-  <script type="module">
+    <script type="module">
       const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract" });
-      console.log(lrc.getData());
-  </script>
+      console.log(raghs.getData());
+      
+      const extract = await Lrc.load("./res/Je-veux.lrc", {type: "extract", audio_selector: "#song"})
+      console.log(extract.getData().metadata.ve)
+
+      setInterval(() => {
+        console.log(extract.searchLyric("02:33.06"));
+      }, 30000);
+    </script>
 </html>
