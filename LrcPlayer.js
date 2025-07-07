@@ -219,7 +219,7 @@ class Lrc {
         function findLyric(time) {
             for (let i = 0; i < times.length; i++) {
                 if (times[i] > (currentTime-700)) {
-                    return times[(i-1)]
+                    return this.lyrics[(i-1)]
                     break
                 }
             }
