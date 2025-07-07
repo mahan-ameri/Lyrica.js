@@ -216,25 +216,36 @@ class Lrc {
         })
     }
 
-    searchLyric(time) {
-        let currentTime = this.audio.currentTime * 1000;
-        let times = this.times, lyrics = this.lyrics
-        function findLyric(time) {
+    searchLyric(time, exact, index) {
+        //debugger
+        const { times, lyrics } = this;
+        
+        function findLyric(time, index) {
             for (let i = 0; i < times.length; i++) {
-                if (times[i] > (currentTime-700)) {
-                    return lyrics[(i-1)]
-                    break
+                if (times[i] > (time)) {
+                    return index ? [lyrics[(i-1)], i-1] : lyrics[(i-1)]
                 }
             }
         }
+        function findExactLyric(time, index) {
+            let i = times.indexOf(time);
+            let text = (i>0 ? lyrics[i] : false)
+            return index ? [text, i] : text
+        }
 
         const timeRegex = /(\d+):(\d{2})\.(\d{2})/;
-        let match = timeRegex.exec(time)
+        let match = timeRegex.exec(time), askedTime;
         if (!(match)) {
-            return findLyric(time)
+            askedTime = time
         }else {
             const [_, min, sec, ms] = match;
-            return findLyric(this.timeToMilliseconds([min, sec, ms]))
+            askedTime = this.timeToMilliseconds([min, sec, ms])
+            //return findLyric(this.timeToMilliseconds([min, sec, ms]))
+        }
+        if (exact) {
+            return findExactLyric(askedTime, index)
+        }else {
+            return findLyric(askedTime, index)
         }
     }
 

@@ -45,10 +45,8 @@
       console.log(raghs.getData());
       
       const extract = await Lrc.load("./res/Je-veux.lrc", {type: "extract", audio_selector: "#song"})
-      console.log(extract.getData().metadata.ve)
+      console.log(extract.getData().metadata)
 
-      setInterval(() => {
-        console.log(extract.searchLyric("02:33.06"));
-      }, 10000);
+      console.log(extract.searchLyric("02:33.06", true, true));
     </script>
 </html>
