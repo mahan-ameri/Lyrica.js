@@ -174,31 +174,11 @@ class Lrc {
 
     syncLyrics() {
         const monitor = document.querySelector(this.options.monitor_selector);
-        let times = this.times
+        const { times, lyrics, audio } = this;
         let lastIndex = [0, 0];
         let interval;
-        let audio = this.audio
 
-        audio.addEventListener("play", () => {
-            interval = setInterval(() => {
-                let currentTimeMs = audio.currentTime * 1000;
-                if (Math.abs(currentTimeMs-lastIndex[1])<400) {
-                    if (this.times[lastIndex[0]]+400<=currentTimeMs) {
-                        monitor.textContent = this.lyrics[lastIndex[0]]
-                        lastIndex=[lastIndex[0]+1, currentTimeMs]
-                    }else{
-                        lastIndex=[lastIndex[0], currentTimeMs]
-                    }
-                }else {
-                    lastIndex=[lastIndex[0], currentTimeMs]
-                    CheckAll(this.times, this.lyrics)
-                }
-            }, 10);
-        });
-        audio.addEventListener("pause", () => {
-            clearInterval(interval)
-        })
-        function CheckAll(times, lyrics) {
+        function CheckAll() {
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
                     if (times[i] <= (currentTime-700)) {
@@ -211,15 +191,38 @@ class Lrc {
                     }
                 }
         }
+
+        audio.addEventListener("play", () => {
+            interval = setInterval(() => {
+                let currentTimeMs = audio.currentTime * 1000;
+                if (Math.abs(currentTimeMs-lastIndex[1])<400) {
+                    if (times[lastIndex[0]]+400<=currentTimeMs) {
+                        monitor.textContent = lyrics[lastIndex[0]]
+                        lastIndex=[lastIndex[0]+1, currentTimeMs]
+                    }else{
+                        lastIndex=[lastIndex[0], currentTimeMs]
+                    }
+                }else {
+                    lastIndex=[lastIndex[0], currentTimeMs]
+                    CheckAll()
+                }
+            }, 10);
+        });
+        audio.addEventListener("pause", () => {
+            clearInterval(interval)
+        })
+        audio.addEventListener("seeked", ()=>{
+            CheckAll()
+        })
     }
 
     searchLyric(time) {
         let currentTime = this.audio.currentTime * 1000;
-        let times = this.times
+        let times = this.times, lyrics = this.lyrics
         function findLyric(time) {
             for (let i = 0; i < times.length; i++) {
                 if (times[i] > (currentTime-700)) {
-                    return this.lyrics[(i-1)]
+                    return lyrics[(i-1)]
                     break
                 }
             }
