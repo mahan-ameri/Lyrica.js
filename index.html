@@ -19,37 +19,38 @@
   </body>
   <script src="./LrcPlayer.js"></script>
   <script>
-    var radio = new Lrc("./res/Runaway by Aurora.lrc", {
-      type: "static-text",
-      animation: {
-        animation_type: "normal",
-        animation_parameters: ["up", "center", "linear"],
-      },
-      audio_selector: "#radio",
-      container_selector: "#texts",
-      monitor_selector: "#mon2",
-    });
+    // var radio = new Lrc("./res/Runaway by Aurora.lrc", {
+    //   type: "static-text",
+    //   animation: {
+    //     animation_type: "normal",
+    //     animation_parameters: ["up", "center", "linear"],
+    //   },
+    //   audio_selector: "#radio",
+    //   container_selector: "#texts",
+    //   monitor_selector: "#mon2",
+    // });
 
-    var print = new Lrc("./res/Raghs.lrc", {type: "print", container_selector: "#just-extract"});
+    // var print = new Lrc("./res/Raghs.lrc", {type: "print", container_selector: "#just-extract"});
 
   </script>
   <script type="module">
     const example = "[02:06.60] Hello, World!\n [02:08.69]I'm mahan\n"
 
-    var lrc = new Lrc(example, {
-      isRaw: true,
-      type: "static-text",
-      audio_selector: "#song",
-      container_selector: "#conta",
-      monitor_selector: "#mon1 pre",
-    });
+    // var lrc = new Lrc(example, {
+    //   isRaw: true,
+    //   type: "static-text",
+    //   audio_selector: "#song",
+    //   container_selector: "#conta",
+    //   monitor_selector: "#mon1 pre",
+    // });
 
-    const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract"});
-    console.log(raghs.getData());
+    // const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract"});
+    // console.log(raghs.getData());
     
     const extract = await Lrc.load("./res/Je-veux.lrc", {type: "extract", audio_selector: "#song"})
-    console.log(extract.getData().metadata)
+    console.log(extract.getData())
 
-    console.log(extract.searchLyric("02:33.06", true, true));
+     console.log(extract.searchLyric("02:33.06", true, true));
+     console.log(extract.searchTime("j'en ferais quoi ?", true));
     </script>
 </html>

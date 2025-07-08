@@ -75,7 +75,6 @@ class Lrc {
         }
     }
 
-
     static async load(path, options) {
         const LrcAsync = new Lrc(path, options);
         await LrcAsync.init();
@@ -97,7 +96,6 @@ class Lrc {
     }
 
     extractLrc(lrcText) {
-        // Clear the arrays before processing
         this.times = [];
         this.lyrics = [];
         this.metadata = {};
@@ -125,7 +123,7 @@ class Lrc {
         this.lyrics = entries.map(entry => entry.lyric);
 
         if (this.options.type === "extract") {
-            // Perform actions for 'extract' type if needed
+            // Perform actions for 'extract' type
         } else if (this.options.type === "static-text") {
             this.syncLyrics()
         } else {
@@ -140,13 +138,11 @@ class Lrc {
         const times = [];
         let match, metaMatch;
 
-        // Collect all time tags
         while ((match = timeRegex.exec(line)) !== null) {
             const [_, min, sec, ms] = match;
             times.push([min, sec, ms]);
         }
 
-        // Find the index after the last time tag
         const lastMatch = [...line.matchAll(timeRegex)].pop();
         const text = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : line;
 
@@ -251,6 +247,22 @@ class Lrc {
         }else {
             return findLyric(askedTime, index)
         }
+    }
+
+    searchTime(lyric, index) {
+        console.time("ehem")
+        const { times, lyrics } = this;
+        let matchedTimes = [];
+        let matchedTimesIndexes = [];
+        for (let i=0; i<=lyrics.length; i++) {
+            if (lyrics[i] === lyric) {
+                matchedTimes.push(times[i]);
+                matchedTimesIndexes.push(i);
+            }
+        }
+        let mtr = matchedTimes.length>1 ? matchedTimes : matchedTimes[0];
+        let mtir = matchedTimesIndexes.length>1 ? matchedTimesIndexes : matchedTimesIndexes[0];
+        return index ? [mtr, mtir] : mtr
     }
 
     getData() {
