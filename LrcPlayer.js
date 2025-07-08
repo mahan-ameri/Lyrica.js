@@ -6,6 +6,7 @@ class Lrc {
         this.lyrics = [];
         this.metadata = {};
         this.audio = document.querySelector(this.options.audio_selector);
+
         this.validateInputs();
     }
 
@@ -19,10 +20,10 @@ class Lrc {
     }
 
     validatePath() {
-        if (typeof this.path !== "string" || this.path === "") {
+        if (typeof this.path !== "string" || this.path === "" && !this.options.isRaw) {
             throw new Error("File's path is required and should be a string.");
         }
-        if (!this.path.endsWith(".lrc")) {
+        if (!this.path.endsWith(".lrc") && !this.options.isRaw) {
             throw new Error("File's path should have a valid '.lrc' format.");
         }
     }
@@ -67,7 +68,7 @@ class Lrc {
     }
 
     validateAnimation() {
-        const validAnimations = ["normal", "fade", "flip", "come", "push", "write", "progress"];
+        const validAnimations = ["normal", "write", "progress"];
         if (this.options.animation && !validAnimations.includes(this.options.animation.animation_type)) {
             throw new Error(`"${this.options.animation.animation_type}" is not a valid animation type.
 +(Valid animations: "${validAnimations.join('", "')}")`);
@@ -81,13 +82,18 @@ class Lrc {
         return LrcAsync;
     }
     async init() {
-        try {
-            const response = await fetch(this.path);
-            const lrcText = await response.text();
-            this.extractLrc(lrcText);
-        } catch (error) {
-            console.error('Error fetching LRC file:', error);
+        if (!this.options.isRaw) {
+            try {
+                const response = await fetch(this.path);
+                const lrcText = await response.text();
+                this.extractLrc(lrcText);
+            } catch (error) {
+                console.error('Error fetching LRC:', error);
+            }
+        } else {
+            this.extractLrc(this.path)
         }
+
     }
 
     extractLrc(lrcText) {
@@ -217,7 +223,6 @@ class Lrc {
     }
 
     searchLyric(time, exact, index) {
-        //debugger
         const { times, lyrics } = this;
         
         function findLyric(time, index) {
@@ -240,7 +245,6 @@ class Lrc {
         }else {
             const [_, min, sec, ms] = match;
             askedTime = this.timeToMilliseconds([min, sec, ms])
-            //return findLyric(this.timeToMilliseconds([min, sec, ms]))
         }
         if (exact) {
             return findExactLyric(askedTime, index)
