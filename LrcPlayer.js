@@ -5,6 +5,7 @@ class Lrc {
         this.times = [];
         this.lyrics = [];
         this.metadata = {};
+        this.gCurrentLyric;
         this.audio = document.querySelector(this.options.audio_selector);
 
         this.validateInputs();
@@ -33,7 +34,7 @@ class Lrc {
             throw new Error("Options object is required.");
         }
 
-        const validTypes = ["static-text", "static-view", "scrollable", "print", "extract"];
+        const validTypes = ["sync", "print", "extract"];
         if (!this.options.type || !validTypes.includes(this.options.type)) {
             throw new Error(`"${this.options.type}" is not a valid type.
 +(Valid types: "${validTypes.join('", "')}")`);
@@ -105,7 +106,7 @@ class Lrc {
 
         lines.forEach(line => {
             const { times, text } = this.extractTimeAndText(line);
-            if (text && times.length > 0) {
+            if (times.length > 0) {
                 for (const timeArr of times) {
                     const millis = this.timeToMilliseconds(timeArr);
                     if (!isNaN(millis)) {
@@ -124,7 +125,7 @@ class Lrc {
 
         if (this.options.type === "extract") {
             // Perform actions for 'extract' type
-        } else if (this.options.type === "static-text") {
+        } else if (this.options.type === "sync") {
             this.syncLyrics()
         } else {
             this.renderLyrics();
@@ -176,16 +177,21 @@ class Lrc {
 
     syncLyrics() {
         const monitor = document.querySelector(this.options.monitor_selector);
-        const { times, lyrics, audio } = this;
+        const { times, lyrics, audio} = this;
         let lastIndex = [0, 0];
         let interval;
 
-        function CheckAll() {
+        if (times[0]==0) {
+            this.gCurrentLyric=[lyrics[0], times[0], 0]
+        }
+
+        const CheckAll = () => {
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
                     if (times[i] <= (currentTime-700)) {
                         if (i === lastIndex[0] + 1 || i === 0) {
                             monitor.textContent = lyrics[i];
+                            this.gCurrentLyric = [lyrics[i], times[i], i];
                             lastIndex[0] = i;
                         }
                     } else {
@@ -199,23 +205,24 @@ class Lrc {
                 let currentTimeMs = audio.currentTime * 1000;
                 if (Math.abs(currentTimeMs-lastIndex[1])<400) {
                     if (times[lastIndex[0]]+400<=currentTimeMs) {
-                        monitor.textContent = lyrics[lastIndex[0]]
-                        lastIndex=[lastIndex[0]+1, currentTimeMs]
+                        monitor.textContent = lyrics[lastIndex[0]];
+                        this.gCurrentLyric = [lyrics[lastIndex[0]], times[lastIndex[0]], lastIndex[0]];
+                        lastIndex=[lastIndex[0]+1, currentTimeMs];
                     }else{
-                        lastIndex=[lastIndex[0], currentTimeMs]
+                        lastIndex=[lastIndex[0], currentTimeMs];
                     }
                 }else {
-                    lastIndex=[lastIndex[0], currentTimeMs]
-                    CheckAll()
+                    lastIndex=[lastIndex[0], currentTimeMs];
+                    CheckAll();
                 }
             }, 10);
         });
         audio.addEventListener("pause", () => {
-            clearInterval(interval)
-        })
+            clearInterval(interval);
+        });
         audio.addEventListener("seeked", ()=>{
-            CheckAll()
-        })
+            CheckAll();
+        });
     }
 
     searchLyric(time, exact, index) {
@@ -263,6 +270,13 @@ class Lrc {
         let mtr = matchedTimes.length>1 ? matchedTimes : matchedTimes[0];
         let mtir = matchedTimesIndexes.length>1 ? matchedTimesIndexes : matchedTimesIndexes[0];
         return index ? [mtr, mtir] : mtr
+    }
+
+    getCurrent() {
+        //debugger
+        if (this.options.type === "sync") {
+            return this.gCurrentLyric
+        }
     }
 
     getData() {
