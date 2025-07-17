@@ -35,8 +35,7 @@ class Lrc {
 
         const validTypes = ["sync", "print", "extract"];
         if (!this.options.type || !validTypes.includes(this.options.type)) {
-            throw new Error(`"${this.options.type}" is not a valid type.
-+(Valid types: "${validTypes.join('", "')}")`);
+            throw new Error(`"${this.options.type}" is not a valid type.\n- (Valid types: "${validTypes.join('", "')}")`);
         }
 
         const requiredOptions = this.getRequiredOptionsByType();
@@ -69,9 +68,8 @@ class Lrc {
 
     validateAnimation() {
         const validAnimations = ["normal", "write", "progress"];
-        if (this.options.animation && !validAnimations.includes(this.options.animation.animation_type)) {
-            throw new Error(`"${this.options.animation.animation_type}" is not a valid animation type.
-+(Valid animations: "${validAnimations.join('", "')}")`);
+        if (this.options.animations && !validAnimations.includes(this.options.animations.animation_type)) {
+            throw new Error(`"${this.options.animations.animation_type}" is not a valid animation type.\n- (Valid animations: "${validAnimations.join('", "')}")`);
         }
     }
 
@@ -176,8 +174,8 @@ class Lrc {
     }
 
     syncLyrics() {
-        const monitor = document.querySelector(this.options.container_selector);
         const { times, lyrics, audio} = this;
+        const animationType = this.options?.animations?.animation_type || "normal";
         let lastIndex = [0, 0];
         let interval;
 
@@ -191,7 +189,7 @@ class Lrc {
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
                     if (times[(i+1)] >= (currentTime)) {
-                        this.sendLyric("default", [lyrics[i], i])
+                        this.sendLyric(animationType, [lyrics[i], i])
                         this.gCurrentLyric = [lyrics[i], times[i], i];
                         lastIndex=[lastIndex[0], currentTime];
                         lastIndex[0] = i;
@@ -208,7 +206,7 @@ class Lrc {
 
                         console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
 
-                        this.sendLyric("default", [lyrics[lastIndex[0]], lastIndex[0]], currentTime);
+                        this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime);
                         this.gCurrentLyric = [lyrics[lastIndex[0]], times[lastIndex[0]], lastIndex[0]];
                         lastIndex=[lastIndex[0]+1, currentTime];
                     }else{
@@ -239,7 +237,7 @@ class Lrc {
             el.classList.add("lyric");
             el.textContent = lyric[0];
             this.container.appendChild(el);
-            el.style.animation="0.2s LrcLyricIn ease-out"
+            el.style.animation=`${this.options?.animations?.keyframe_id || 'LrcLyricIn'} ${this.options?.animations?.animation_parameters || 'ease-out 0.2s'}`;
 
             clearTimeout()
             // let wait = ((Number(this.times[(lyric[1]+1)]) - Number(currentTime)))
@@ -248,7 +246,7 @@ class Lrc {
             // }, wait)
         }
 
-        if (mode === "default") {
+        if (mode === "normal") {
             defaultSendType()
         }
     }
