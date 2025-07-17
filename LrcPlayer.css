@@ -27,6 +27,18 @@
         transform: scale(1);
     }
 }
+@keyframes baaqIn {
+    from {
+        opacity: 0.5;
+        color: #194d2d;
+        transform: translateY(-50%);
+    }
+    to{
+        opacity: 1;
+        color: #333;
+
+    }
+}
 @keyframes LrcLyricOut {
     from {
         transform: scale(1);

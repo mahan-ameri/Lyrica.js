@@ -58,7 +58,12 @@
      const baaq = new Lrc("./res/baaq.lrc", {
       type: "sync",
       audio_selector: "#baaq",
-      container_selector: "#baaq-container"
+      container_selector: "#baaq-container",
+      animations: {
+        animation_type: "normal",
+        keyframe_id: "baaqIn",
+        animation_parameters: "ease-out 0.6s"
+      }
      })
      
     </script>
