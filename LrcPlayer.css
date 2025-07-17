@@ -1,0 +1,37 @@
+@font-face {
+    font-family: 'tehran';
+    src: url('./res/B\ Tehran_0.ttf');
+}
+
+.lyric {
+    color: #333;
+    font-family: monospace;
+    display: inline-block;
+    padding: 0px 10px;
+    font-size: 8vw;
+    border-radius: 5px;
+    font-family: 'tehran';
+    background: #f3f3f3;
+}
+#baaq-container {
+    direction: rtl;
+    display: flex;
+    justify-content: center;
+}
+
+@keyframes LrcLyricIn {
+    from {
+        transform: scale(0.8);
+    }
+    to {
+        transform: scale(1);
+    }
+}
+@keyframes LrcLyricOut {
+    from {
+        transform: scale(1);
+    }
+    to {
+        transform: scale(0.8);
+    }
+}

@@ -7,7 +7,6 @@ class Lrc {
         this.metadata = {};
         this.gCurrentLyric;
         this.audio = document.querySelector(this.options.audio_selector);
-
         this.validateInputs();
     }
 
@@ -54,7 +53,7 @@ class Lrc {
             case "print":
                 return ['container_selector'];
             default:
-                return ['audio_selector', 'container_selector', 'monitor_selector'];
+                return ['audio_selector', 'container_selector'];
         }
     }
 
@@ -126,6 +125,7 @@ class Lrc {
         if (this.options.type === "extract") {
             // Perform actions for 'extract' type
         } else if (this.options.type === "sync") {
+            this.container = document.querySelector(this.options.container_selector)
             this.syncLyrics()
         } else {
             this.renderLyrics();
@@ -176,7 +176,7 @@ class Lrc {
     }
 
     syncLyrics() {
-        const monitor = document.querySelector(this.options.monitor_selector);
+        const monitor = document.querySelector(this.options.container_selector);
         const { times, lyrics, audio} = this;
         let lastIndex = [0, 0];
         let interval;
@@ -186,45 +186,81 @@ class Lrc {
         }
 
         const CheckAll = () => {
+            console.log("called");
+            
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
-                    if (times[i] <= (currentTime-700)) {
-                        if (i === lastIndex[0] + 1 || i === 0) {
-                            monitor.textContent = lyrics[i];
-                            this.gCurrentLyric = [lyrics[i], times[i], i];
-                            lastIndex[0] = i;
-                        }
-                    } else {
-                        break;
+                    if (times[(i+1)] >= (currentTime)) {
+                        this.sendLyric("default", [lyrics[i], i])
+                        this.gCurrentLyric = [lyrics[i], times[i], i];
+                        lastIndex=[lastIndex[0], currentTime];
+                        lastIndex[0] = i;
+                        break
                     }
                 }
         }
 
         audio.addEventListener("play", () => {
             interval = setInterval(() => {
-                let currentTimeMs = audio.currentTime * 1000;
-                if (Math.abs(currentTimeMs-lastIndex[1])<400) {
-                    if (times[lastIndex[0]]+400<=currentTimeMs) {
-                        monitor.textContent = lyrics[lastIndex[0]];
+                let currentTime = audio.currentTime * 1000;
+                if (Math.abs(currentTime-lastIndex[1])<70) {
+                    if (times[lastIndex[0]]+400<=currentTime) {
+
+                        console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
+
+                        this.sendLyric("default", [lyrics[lastIndex[0]], lastIndex[0]], currentTime);
                         this.gCurrentLyric = [lyrics[lastIndex[0]], times[lastIndex[0]], lastIndex[0]];
-                        lastIndex=[lastIndex[0]+1, currentTimeMs];
+                        lastIndex=[lastIndex[0]+1, currentTime];
                     }else{
-                        lastIndex=[lastIndex[0], currentTimeMs];
+                        lastIndex=[lastIndex[0], currentTime];
                     }
                 }else {
-                    lastIndex=[lastIndex[0], currentTimeMs];
-                    CheckAll();
+                    CheckAll(currentTime);
                 }
             }, 10);
         });
         audio.addEventListener("pause", () => {
             clearInterval(interval);
         });
-        audio.addEventListener("seeked", ()=>{
-            CheckAll();
-        });
+        audio.addEventListener("seeked", () => {
+            CheckAll()
+        })
+
     }
 
+    sendLyric(mode, lyric, currentTime) {
+        const defaultSendType = () => {
+            const prevLyric = this.container.querySelector(`${this.options.container_selector} p.lyric`);
+            if (prevLyric) {
+                prevLyric.remove();
+            }
+
+            const el = document.createElement('p');
+            el.classList.add("lyric");
+            el.textContent = lyric[0];
+            this.container.appendChild(el);
+            el.style.animation="0.2s LrcLyricIn ease-out"
+
+            clearTimeout()
+            // let wait = ((Number(this.times[(lyric[1]+1)]) - Number(currentTime)))
+            // setTimeout(()=>{
+            //     el.style.animation="0.2s LrcLyricOut ease-in forwards"
+            // }, wait)
+        }
+
+        if (mode === "default") {
+            defaultSendType()
+        }
+    }
+
+    /**
+     * Searches for a lyric line based on the provided time.
+     *
+     * @param {number|string} time - The time to search for. Can be a number (milliseconds) or a string in the format "mm:ss.xx".
+     * @param {boolean} exact - If true, searches for an exact match of the time; otherwise, finds the closest previous lyric.
+     * @param {boolean} [index=false] - If true, returns an array with the lyric and its index; otherwise, returns only the lyric text.
+     * @returns {string|[string, number]|false} The lyric text, or an array [lyric, index] if `index` is true. Returns `false` if no exact match is found.
+     */
     searchLyric(time, exact, index) {
         const { times, lyrics } = this;
         
