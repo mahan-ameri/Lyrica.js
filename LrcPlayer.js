@@ -6,6 +6,7 @@ class Lrc {
         this.lyrics = [];
         this.metadata = {};
         this.gCurrentLyric;
+        this.contaScroll = true
         this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
     }
@@ -126,11 +127,31 @@ class Lrc {
             // Perform actions for 'extract' type
         } else if (type === "sync" && this.options.animations && this.options.animations.animation_type === "slide") {
             this.container = document.querySelector(this.options.container_selector)
+            this.container.scrollTo({ top: 0 });
+            this.container.addEventListener("scroll", (e) => {
+                if (this.contaScroll) {
+                    this.contaScroll = false;
+                    console.log("scroll");
+                    setTimeout(()=>{
+                        this.contaScroll = true;
+                    }, 3000)
+                }
+            })
+
             this.renderLyrics()
+            if (this.options.animations && this.options.animations.auto_scroll) {
+                let segapHeight = (this.container.offsetHeight)/1.8;
+                let segap = this.container.querySelectorAll(".segap")
+                segap.forEach(el => {
+                    el.style.height = segapHeight+'px'
+                    el.style.width = "100%"
+                })
+            }
+
             this.syncLyrics()
         } else if (type === "sync") {
-            this.container = document.querySelector(this.options.container_selector)
-            this.syncLyrics()
+            this.container = document.querySelector(this.options.container_selector);
+            this.syncLyrics();
         } else if (type === "print") {
             this.renderLyrics();
         }
@@ -172,12 +193,25 @@ class Lrc {
 
     renderLyrics() {
         const container = document.querySelector(this.options.container_selector);
+        let isAutoScroll = this.options.animations && this.options.animations.auto_scroll
+        if (isAutoScroll) {
+            let start = document.createElement('span')
+            start.classList.add("segap");
+            container.appendChild(start);
+        }
+        
         this.lyrics.forEach(lyric => {
             const p = document.createElement("p");
             p.textContent = lyric;
             p.classList.add("lyric");
             container.appendChild(p);
         });
+
+        if (isAutoScroll) {
+            let end = document.createElement('span');
+            end.classList.add("segap");
+            container.appendChild(end)
+        }
     }
 
     syncLyrics() {
@@ -236,10 +270,7 @@ class Lrc {
     sendLyric(mode, lyric, currentTime) {
         const defaultSendType = () => {
             const prevLyric = this.container.querySelector(`.lyric`);
-            if (prevLyric) {
-                prevLyric.remove();
-            }
-
+            if (prevLyric) { prevLyric.remove(); }
             const el = document.createElement('p');
             el.classList.add("lyric");
             el.textContent = lyric[0];
@@ -247,10 +278,11 @@ class Lrc {
             el.style.animation=`${this.options?.animations?.keyframe_id || 'LrcLyricIn'} ${this.options?.animations?.animation_parameters || 'ease-out 0.2s'}`;
 
             clearTimeout()
-            // let wait = ((Number(this.times[(lyric[1]+1)]) - Number(currentTime)))
-            // setTimeout(()=>{
-            //     el.style.animation="0.2s LrcLyricOut ease-in forwards"
-            // }, wait)
+            /*
+            let wait = ((Number(this.times[(lyric[1]+1)]) - Number(currentTime)))
+            setTimeout(()=>{
+                el.style.animation="0.2s LrcLyricOut ease-in forwards"
+            }, wait)*/
         }
 
         const slideSendType = () => {
@@ -259,7 +291,22 @@ class Lrc {
                 lyric.classList.remove("active")
             });
 
-            this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 1)})`).classList.add("active")
+            this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 2)})`).classList.add("active")
+
+            if (this.options.animations.auto_scroll && this.contaScroll) {
+                let contaHeight = this.container.offsetHeight;
+                let lyricHeight = this.container.querySelector(".lyric").offsetHeight;
+
+                let calcTop = ((((lyric[1]+0.6)*lyricHeight) + contaHeight/1.8) - (contaHeight/2))
+
+                this.contaScroll = false
+                
+                this.container.scrollTo({
+                    top: calcTop,
+                    behavior: 'smooth'
+                })
+                setTimeout(()=>{this.contaScroll = true}, 1000)
+            }
         }
 
         switch (mode) {
