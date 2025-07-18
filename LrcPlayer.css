@@ -3,6 +3,11 @@
     src: url('./res/B\ Tehran_0.ttf');
 }
 
+* {
+    padding: 0;
+    margin: 0;
+}
+
 #baaq-container .lyric {
     color: #333;
     font-family: monospace;
@@ -19,15 +24,36 @@
     justify-content: center;
 }
 
+#mon2 {
+    position: relative;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    justify-content: center;
+    overflow-y: scroll;
+    width: 90%;
+    aspect-ratio: 16 / 9;
+    margin: 20px;
+    left: 50%;
+    transform: translate(-50%, 0%);
+    background: rgba(21, 76, 140, 0.2);
+}
+#mon2::-webkit-scrollbar {
+    display: none;
+}
 #mon2 .lyric {
+    width: 80%;
+    height: 10%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
     transition: 0.3s;
-    transform: translateX(-50%);
 }
 #mon2 .lyric.active {
     font-size: 2vw;
     text-indent: 10px;
     font-weight: bold;
-    transform: translateX(0);
     /* background: rgba(53, 140, 171, 0.393); */
 }
 
