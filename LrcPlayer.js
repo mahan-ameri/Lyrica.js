@@ -67,7 +67,7 @@ class Lrc {
     }
 
     validateAnimation() {
-        const validAnimations = ["normal", "write", "progress"];
+        const validAnimations = ["normal", "write", "progress", "slide"];
         if (this.options.animations && !validAnimations.includes(this.options.animations.animation_type)) {
             throw new Error(`"${this.options.animations.animation_type}" is not a valid animation type.\n- (Valid animations: "${validAnimations.join('", "')}")`);
         }
@@ -120,12 +120,18 @@ class Lrc {
         this.times = entries.map(entry => entry.time);
         this.lyrics = entries.map(entry => entry.lyric);
 
-        if (this.options.type === "extract") {
+        let type = this.options.type;
+
+        if (type === "extract") {
             // Perform actions for 'extract' type
-        } else if (this.options.type === "sync") {
+        } else if (type === "sync" && this.options.animations && this.options.animations.animation_type === "slide") {
+            this.container = document.querySelector(this.options.container_selector)
+            this.renderLyrics()
+            this.syncLyrics()
+        } else if (type === "sync") {
             this.container = document.querySelector(this.options.container_selector)
             this.syncLyrics()
-        } else {
+        } else if (type === "print") {
             this.renderLyrics();
         }
     }
@@ -169,6 +175,7 @@ class Lrc {
         this.lyrics.forEach(lyric => {
             const p = document.createElement("p");
             p.textContent = lyric;
+            p.classList.add("lyric");
             container.appendChild(p);
         });
     }
@@ -228,7 +235,7 @@ class Lrc {
 
     sendLyric(mode, lyric, currentTime) {
         const defaultSendType = () => {
-            const prevLyric = this.container.querySelector(`${this.options.container_selector} p.lyric`);
+            const prevLyric = this.container.querySelector(`.lyric`);
             if (prevLyric) {
                 prevLyric.remove();
             }
@@ -246,8 +253,22 @@ class Lrc {
             // }, wait)
         }
 
-        if (mode === "normal") {
-            defaultSendType()
+        const slideSendType = () => {
+            let pervLyric = this.container.querySelectorAll(".active")
+            pervLyric.forEach(lyric => {
+                lyric.classList.remove("active")
+            });
+
+            this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 1)})`).classList.add("active")
+        }
+
+        switch (mode) {
+            case "normal":
+                defaultSendType();
+                break;
+            case "slide":
+                slideSendType();
+                break;
         }
     }
 
