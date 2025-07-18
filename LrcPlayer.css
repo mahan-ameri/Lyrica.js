@@ -3,7 +3,7 @@
     src: url('./res/B\ Tehran_0.ttf');
 }
 
-.lyric {
+#baaq-container .lyric {
     color: #333;
     font-family: monospace;
     display: inline-block;
@@ -17,6 +17,18 @@
     direction: rtl;
     display: flex;
     justify-content: center;
+}
+
+#mon2 .lyric {
+    transition: 0.3s;
+    transform: translateX(-50%);
+}
+#mon2 .lyric.active {
+    font-size: 2vw;
+    text-indent: 10px;
+    font-weight: bold;
+    transform: translateX(0);
+    /* background: rgba(53, 140, 171, 0.393); */
 }
 
 @keyframes LrcLyricIn {
