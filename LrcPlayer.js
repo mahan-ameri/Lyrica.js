@@ -416,6 +416,31 @@ class Lrc {
         }
     }
 
+    next() {
+        if (this.options.type === "sync") {
+            let currentIndex = this.gCurrentLyric?.[2] || 0;
+            if (currentIndex < this.lyrics.length - 1) {
+                this.audio.currentTime = (this.times[currentIndex + 1] / 1000) + 0.2;
+                this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
+                this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
+            }
+        } else {
+            console.warn("This method is only available for 'sync' type LRCs.");
+        }
+    }
+    previous() {
+        if (this.options.type === "sync") {
+            let currentIndex = this.gCurrentLyric?.[2] || 0;
+            if (currentIndex > 0) {
+                this.audio.currentTime = (this.times[currentIndex - 1] / 1000) + 0.2;
+                this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
+                this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
+            }
+        } else {
+            console.warn("This method is only available for 'sync' type LRCs.");
+        }
+    }
+
     getData() {
         return {"lyrics": this.lyrics, "times": this.times, "metadata": this.metadata}
     }

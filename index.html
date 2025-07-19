@@ -10,6 +10,7 @@
     <div class="LP-monitor" id="mon1"></div>
     <ul id="LP-lyrics conta"></ul>
     <audio src="./res/Runaway - Aurora.mp3" id="radio" style="width: 100%" controls></audio>
+    <button onclick="nextLyric()">next</button><button onclick="prevLyric()">prev</button>
     <div class="LP-monitor" id="mon2"></div>
     <ul id="LP-lyrics texts"></ul>
 
@@ -21,16 +22,16 @@
 
   <script src="./LrcPlayer.js"></script>
   <script>
-    // var radio = new Lrc("./res/Runaway by Aurora.lrc", {
-    //   type: "sync",
-    //   animation: {
-    //     animation_type: "normal",
-    //     animation_parameters: ["up", "center", "linear"],
-    //   },
-    //   audio_selector: "#radio",
-    //   container_selector: "#texts",
-    //   //monitor_selector: "#mon2",
-    // });
+    /*var radio = new Lrc("./res/Runaway by Aurora.lrc", {
+      type: "sync",
+      animation: {
+        animation_type: "normal",
+        animation_parameters: ["up", "center", "linear"],
+      },
+      audio_selector: "#radio",
+      container_selector: "#texts",
+      //monitor_selector: "#mon2",
+    });*/
 
     var print = new Lrc("./res/Raghs.lrc", {type: "print", container_selector: "#just-extract"});
 
@@ -44,37 +45,44 @@
       container_selector: "#mon1"
     });
 
-    // const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract"});
-    // console.log(raghs.getData());
+    /*const raghs = await Lrc.load("./res/Raghs.lrc", { type: "extract"});
+    console.log(raghs.getData());
     
-    // const extract = await Lrc.load("./res/Je-veux.lrc", {type: "extract", audio_selector: "#song"})
+    const extract = await Lrc.load("./res/Je-veux.lrc", {type: "extract", audio_selector: "#song"})
 
-    //  console.log(extract.searchLyric("02:33.06", true, true));
-    //  console.log(extract.searchTime("j'en ferais quoi ?", true));
-    //  setInterval(()=>{
-    //     console.log(lrc.getCurrent())
-    //  }, 20000)
+     console.log(extract.searchLyric("02:33.06", true, true));
+     console.log(extract.searchTime("j'en ferais quoi ?", true));
+     setInterval(()=>{
+        console.log(lrc.getCurrent())
+     }, 20000)
 
-    //  const baaq = new Lrc("./res/baaq.lrc", {
-    //   type: "sync",
-    //   audio_selector: "#baaq",
-    //   container_selector: "#baaq-container",
-    //   animations: {
-    //     animation_type: "normal",
-    //     keyframe_id: "baaqIn",
-    //     animation_parameters: "ease-out 0.6s"
-    //   }
-    //  })
+     const baaq = new Lrc("./res/baaq.lrc", {
+      type: "sync",
+      audio_selector: "#baaq",
+      container_selector: "#baaq-container",
+      animations: {
+        animation_type: "normal",
+        keyframe_id: "baaqIn",
+        animation_parameters: "ease-out 0.6s"
+      }
+     })*/
 
      const slider = new Lrc("./res/Runaway by Aurora.lrc", {
-      type: "sync",
-      audio_selector: "#radio",
-      container_selector: "#mon2",
-      animations: {
-        animation_type: "slide",
-        auto_scroll: true
+        type: "sync",
+        audio_selector: "#radio",
+        container_selector: "#mon2",
+        animations: {
+          animation_type: "slide",
+          auto_scroll: true
+        }
+      })
+
+      window.nextLyric = function() {
+        slider.next();
       }
-     })
+      window.prevLyric = function() {
+        slider.previous();
+      }
 
     //  setInterval(()=>{
     //   console.log(slider.getCurrent());
