@@ -6,7 +6,7 @@ class Lrc {
         this.lyrics = [];
         this.metadata = {};
         this.gCurrentLyric;
-        this.contaScroll = true
+        this.contaScroll = true, this.IsSystemScroll = false;
         this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
     }
@@ -128,15 +128,31 @@ class Lrc {
         } else if (type === "sync" && this.options.animations && this.options.animations.animation_type === "slide") {
             this.container = document.querySelector(this.options.container_selector)
             this.container.scrollTo({ top: 0 });
-            this.container.addEventListener("scroll", (e) => {
-                if (this.contaScroll) {
+            let scrollEndTimer, waitToSureTimer;
+
+            this.container.addEventListener("scroll", () => {
+                clearTimeout(scrollEndTimer);
+                clearTimeout(waitToSureTimer);
+                
+                if (this.contaScroll && !this.IsSystemScroll) {
                     this.contaScroll = false;
-                    console.log("scroll");
-                    setTimeout(()=>{
+                };
+                
+                scrollEndTimer = setTimeout(() => {
+                    waitToSureTimer = setTimeout(() => {
+                        let contaHeight = this.container.offsetHeight;
+                        let lyricHeight = this.container.querySelector(".lyric").offsetHeight;
+                        let calcTop = (((((this.gCurrentLyric?.[2] || 0)+0.6)*lyricHeight) + contaHeight/1.8) - (contaHeight/2));
+
+                        this.container.scrollTo({
+                            top: calcTop,
+                            behavior: 'smooth'
+                        })
+
                         this.contaScroll = true;
-                    }, 3000)
-                }
-            })
+                    }, 2000);
+                }, 150);
+            });
 
             this.renderLyrics()
             if (this.options.animations && this.options.animations.auto_scroll) {
@@ -299,13 +315,13 @@ class Lrc {
 
                 let calcTop = ((((lyric[1]+0.6)*lyricHeight) + contaHeight/1.8) - (contaHeight/2))
 
-                this.contaScroll = false
+                this.IsSystemScroll = true;
                 
                 this.container.scrollTo({
                     top: calcTop,
                     behavior: 'smooth'
                 })
-                setTimeout(()=>{this.contaScroll = true}, 1000)
+                setTimeout(()=>{this.IsSystemScroll = false}, 1000)
             }
         }
 
