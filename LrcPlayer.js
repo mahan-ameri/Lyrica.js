@@ -6,7 +6,7 @@ class Lrc {
         this.lyrics = [];
         this.metadata = {};
         this.gCurrentLyric;
-        this.contaScroll = true, this.IsSystemScroll = false;
+        this.contaScroll = true;
         this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
     }
@@ -130,36 +130,57 @@ class Lrc {
             this.container.scrollTo({ top: 0 });
             let scrollEndTimer, waitToSureTimer;
 
-            this.container.addEventListener("scroll", () => {
+            this.container.addEventListener("wheel", () => {
                 clearTimeout(scrollEndTimer);
                 clearTimeout(waitToSureTimer);
-                
-                if (this.contaScroll && !this.IsSystemScroll) {
+
+                if (this.contaScroll) {
                     this.contaScroll = false;
-                };
-                
+                }
+
                 scrollEndTimer = setTimeout(() => {
                     waitToSureTimer = setTimeout(() => {
-                        let contaHeight = this.container.offsetHeight;
-                        let lyricHeight = this.container.querySelector(".lyric").offsetHeight;
-                        let calcTop = (((((this.gCurrentLyric?.[2] || 0)+0.6)*lyricHeight) + contaHeight/1.8) - (contaHeight/2));
+                        const contaHeight = this.container.offsetHeight;
+                        const lyricEl = this.container.querySelector(".lyric");
+                        const lyricHeight = lyricEl.offsetHeight;
+                        const currentIndex = this.gCurrentLyric?.[2] || 0;
+                        const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
 
                         this.container.scrollTo({
                             top: calcTop,
                             behavior: 'smooth'
-                        })
-
+                        });
                         this.contaScroll = true;
                     }, 2000);
                 }, 150);
             });
 
+            this.container.addEventListener("touchstart", () => {
+                if (this.contaScroll) {
+                    this.contaScroll = false;
+                }
+            });
+            this.container.addEventListener("touchend", () => {
+                waitToSureTimer = setTimeout(() => {
+                        const contaHeight = this.container.offsetHeight;
+                        const lyricEl = this.container.querySelector(".lyric");
+                        const lyricHeight = lyricEl.offsetHeight;
+                        const currentIndex = this.gCurrentLyric?.[2] || 0;
+                        const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
+
+                        this.container.scrollTo({
+                            top: calcTop,
+                            behavior: 'smooth'
+                        });
+                        this.contaScroll = true;
+                    }, 2000);
+            });
+
             this.renderLyrics()
             if (this.options.animations && this.options.animations.auto_scroll) {
-                let segapHeight = (this.container.offsetHeight)/1.8;
                 let segap = this.container.querySelectorAll(".segap")
                 segap.forEach(el => {
-                    el.style.height = segapHeight+'px'
+                    el.style.height = '55.5%'
                     el.style.width = "100%"
                 })
             }
@@ -312,16 +333,12 @@ class Lrc {
             if (this.options.animations.auto_scroll && this.contaScroll) {
                 let contaHeight = this.container.offsetHeight;
                 let lyricHeight = this.container.querySelector(".lyric").offsetHeight;
-
-                let calcTop = ((((lyric[1]+0.6)*lyricHeight) + contaHeight/1.8) - (contaHeight/2))
-
-                this.IsSystemScroll = true;
+                let calcTop = ((((lyric[1]+0.6)*lyricHeight) + contaHeight/1.818181) - (contaHeight/2))
                 
                 this.container.scrollTo({
                     top: calcTop,
                     behavior: 'smooth'
                 })
-                setTimeout(()=>{this.IsSystemScroll = false}, 1000)
             }
         }
 
@@ -394,6 +411,8 @@ class Lrc {
         //debugger
         if (this.options.type === "sync") {
             return this.gCurrentLyric
+        } else {
+            console.warn("This method is only available for 'sync' type LRCs.");
         }
     }
 
