@@ -10,7 +10,7 @@
     <div class="LP-monitor" id="mon1"></div>
     <ul id="LP-lyrics conta"></ul>
     <audio src="./res/Runaway - Aurora.mp3" id="radio" style="width: 100%" controls></audio>
-    <button onclick="nextLyric()">next</button><button onclick="prevLyric()">prev</button>
+    <button onclick="nextLyric()">next</button><button onclick="prevLyric()">prev</button><input type="text" onclick="goto(this.value)" placeholder="Go to time" />
     <div class="LP-monitor" id="mon2"></div>
     <ul id="LP-lyrics texts"></ul>
 
@@ -82,6 +82,11 @@
       }
       window.prevLyric = function() {
         slider.previous();
+      }
+      window.goto = function(x) {
+        //slider.goTo({time: x});
+         slider.goTo({index: 42});
+        //slider.goTo({lyric: ["No, no, no", 1]});
       }
 
     //  setInterval(()=>{
