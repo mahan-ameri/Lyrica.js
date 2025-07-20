@@ -392,7 +392,6 @@ class Lrc {
     }
 
     searchTime(lyric, index) {
-        console.time("ehem")
         const { times, lyrics } = this;
         let matchedTimes = [];
         let matchedTimesIndexes = [];
@@ -402,8 +401,8 @@ class Lrc {
                 matchedTimesIndexes.push(i);
             }
         }
-        let mtr = matchedTimes.length>1 ? matchedTimes : matchedTimes[0];
-        let mtir = matchedTimesIndexes.length>1 ? matchedTimesIndexes : matchedTimesIndexes[0];
+        let mtr = matchedTimes;
+        let mtir = matchedTimesIndexes;
         return index ? [mtr, mtir] : mtr
     }
 
@@ -421,22 +420,47 @@ class Lrc {
             let currentIndex = this.gCurrentLyric?.[2] || 0;
             if (currentIndex < this.lyrics.length - 1) {
                 this.audio.currentTime = (this.times[currentIndex + 1] / 1000) + 0.2;
-                this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
-                this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
+                // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
+                // this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
             }
         } else {
             console.warn("This method is only available for 'sync' type LRCs.");
         }
     }
+
     previous() {
         if (this.options.type === "sync") {
             let currentIndex = this.gCurrentLyric?.[2] || 0;
             if (currentIndex > 0) {
                 this.audio.currentTime = (this.times[currentIndex - 1] / 1000) + 0.2;
-                this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
-                this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
+                // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
+                // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
             }
         } else {
+            console.warn("This method is only available for 'sync' type LRCs.");
+        }
+    }
+
+    goTo(place) {
+        if (this.options.type === "sync") {
+            if (place.time && place.time !== '') {
+                let lyric = this.searchLyric(place.time, false, true);
+                this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2;
+            }else if (place.lyric) {
+                let lyricText, lyricIndex;
+                if (Array.isArray(place.lyric)) {
+                    lyricText = place.lyric[0];
+                    lyricIndex = place.lyric[1] || 0;
+                } else {
+                    lyricText = place.lyric;
+                    lyricIndex = 0;
+                }
+                let lyricsIndexes = this.searchTime(lyricText, true);
+                this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
+            }else if (place.index && place.index !== '') {
+                this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
+            }
+        }else {
             console.warn("This method is only available for 'sync' type LRCs.");
         }
     }
