@@ -5,7 +5,7 @@ class Lrc {
         this.times = [];
         this.lyrics = [];
         this.metadata = {};
-        this.gCurrentLyric;
+        this.gCurrentLyric, this.lastPlayedLyric;
         this.contaScroll = true;
         this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
@@ -271,7 +271,7 @@ class Lrc {
                         this.gCurrentLyric = [lyrics[i], times[i], i];
                         lastIndex=[lastIndex[0], currentTime];
                         lastIndex[0] = i;
-                        break
+                        break;
                     }
                 }
         }
@@ -342,6 +342,7 @@ class Lrc {
             }
         }
 
+        this.lastPlayedLyric = this.gCurrentLyric;
         switch (mode) {
             case "normal":
                 defaultSendType();
@@ -437,6 +438,19 @@ class Lrc {
                 // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
             }
         } else {
+            console.warn("This method is only available for 'sync' type LRCs.");
+        }
+    }
+
+    last() {
+        if (this.options.type === "sync") {
+            if (this.lastPlayedLyric === undefined || this.lastPlayedLyric === null) {
+                console.warn("No last played lyric found.");
+                return;
+            }else {
+                this.audio.currentTime = (this.lastPlayedLyric[1] / 1000) + 0.2;
+            }
+        }else {
             console.warn("This method is only available for 'sync' type LRCs.");
         }
     }
