@@ -40,6 +40,7 @@
     const example = "[02:06.60] Hello, World!\n [02:08.69]I'm mahan\n"
 
     var lrc = new Lrc("./res/Je-veux.lrc", {
+      isRaw: false,
       type: "sync",
       audio_selector: "#song",
       container_selector: "#mon1"
@@ -56,16 +57,16 @@
         console.log(lrc.getCurrent())
      }, 20000)*/
 
-     const baaq = new Lrc("./res/baaq.lrc", {
-      type: "sync",
-      audio_selector: "#baaq",
-      container_selector: "#baaq-container",
-      animations: {
-        animation_type: "normal",
-        keyframe_id: "baaqIn",
-        animation_parameters: "ease-out 0.6s"
-      }
-     })
+    //  const baaq = new Lrc("./res/baaq.lrc", {
+    //   type: "sync",
+    //   audio_selector: "#baaq",
+    //   container_selector: "#baaq-container",
+    //   animations: {
+    //     animation_type: "normal",
+    //     keyframe_id: "baaqIn",
+    //     animation_parameters: "ease-out 0.6s"
+    //   }
+    //  })
 
      const slider = new Lrc("./res/Runaway by Aurora.lrc", {
         type: "sync",
@@ -86,9 +87,9 @@
       }
       window.goto = function(x) {
         //slider.goTo({time: x});
-        //slider.goTo({index: 42});
+        slider.goTo({index: 42});
         //slider.goTo({lyric: ["No, no, no", 1]});
-        console.log(slider.getCurrent(), slider.lastPlayedLyric)
+        //console.log(slider.searchTime("No, no, no"));
       }
       window.lastLyric = function() {
         slider.last();

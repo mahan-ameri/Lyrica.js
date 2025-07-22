@@ -30,7 +30,7 @@ class Lrc {
     }
 
     validateOptions() {
-        if (!this.options || Object.keys(this.options).length === 0) {
+        if (!this.options) {
             throw new Error("Options object is required.");
         }
 
@@ -68,7 +68,7 @@ class Lrc {
     }
 
     validateAnimation() {
-        const validAnimations = ["normal", "write", "progress", "slide"];
+        const validAnimations = ["normal", "slide"];
         if (this.options.animations && !validAnimations.includes(this.options.animations.animation_type)) {
             throw new Error(`"${this.options.animations.animation_type}" is not a valid animation type.\n- (Valid animations: "${validAnimations.join('", "')}")`);
         }
@@ -111,8 +111,6 @@ class Lrc {
                         entries.push({ time: millis, lyric: text });
                     }
                 }
-            }else {
-                
             }
         });
 
@@ -121,98 +119,100 @@ class Lrc {
         this.times = entries.map(entry => entry.time);
         this.lyrics = entries.map(entry => entry.lyric);
 
-        let type = this.options.type;
+        const type = this.options.type;
+        if (this.times.length !== 0) {
+            if (type === "extract") {
+                // Perform actions for 'extract' type
+            } else if (type === "sync") {
+                this.container = document.querySelector(this.options.container_selector)
+                if (this.options.animations && this.options.animations.animation_type === "slide") {
+                    this.container.scrollTo({ top: 0 });
+                    let scrollEndTimer, waitToSureTimer;
+                    const wheel_scroll = this.options.animations?.wheel_scroll ?? true, touch_scroll = this.options.animations?.touch_scroll ?? true, change_onclick = this.options.animations?.change_onclick ?? true;
 
-        if (type === "extract") {
-            // Perform actions for 'extract' type
-        } else if (type === "sync") {
-            this.container = document.querySelector(this.options.container_selector)
-            if (this.options.animations && this.options.animations.animation_type === "slide") {
-                this.container.scrollTo({ top: 0 });
-                let scrollEndTimer, waitToSureTimer;
-                const wheel_scroll = this.options.animations?.wheel_scroll ?? true, touch_scroll = this.options.animations?.touch_scroll ?? true, change_onclick = this.options.animations?.change_onclick ?? true;
+                    if (wheel_scroll) {
+                        this.container.addEventListener("wheel", () => {
+                            clearTimeout(scrollEndTimer);
+                            clearTimeout(waitToSureTimer);
 
-                if (wheel_scroll) {
-                    this.container.addEventListener("wheel", () => {
-                        clearTimeout(scrollEndTimer);
-                        clearTimeout(waitToSureTimer);
+                            if (this.contaScroll) {
+                                this.contaScroll = false;
+                            }
 
-                        if (this.contaScroll) {
-                            this.contaScroll = false;
-                        }
+                            scrollEndTimer = setTimeout(() => {
+                                waitToSureTimer = setTimeout(() => {
+                                    const contaHeight = this.container.offsetHeight;
+                                    const lyricEl = this.container.querySelector(".lyric");
+                                    const lyricHeight = lyricEl.offsetHeight;
+                                    const currentIndex = this.gCurrentLyric?.[2] || 0;
+                                    const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
 
-                        scrollEndTimer = setTimeout(() => {
+                                    this.container.scrollTo({
+                                        top: calcTop,
+                                        behavior: 'smooth'
+                                    });
+                                    this.contaScroll = true;
+                                }, 2000);
+                            }, 150);
+                        });
+                    }
+
+                    if (touch_scroll) {
+                        this.container.addEventListener("touchstart", () => {
+                            if (this.contaScroll) {
+                                this.contaScroll = false;
+                            }
+                        });
+                        this.container.addEventListener("touchend", () => {
                             waitToSureTimer = setTimeout(() => {
-                                const contaHeight = this.container.offsetHeight;
-                                const lyricEl = this.container.querySelector(".lyric");
-                                const lyricHeight = lyricEl.offsetHeight;
-                                const currentIndex = this.gCurrentLyric?.[2] || 0;
-                                const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
+                                    const contaHeight = this.container.offsetHeight;
+                                    const lyricEl = this.container.querySelector(".lyric");
+                                    const lyricHeight = lyricEl.offsetHeight;
+                                    const currentIndex = this.gCurrentLyric?.[2] || 0;
+                                    const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
 
-                                this.container.scrollTo({
-                                    top: calcTop,
-                                    behavior: 'smooth'
-                                });
-                                this.contaScroll = true;
-                            }, 2000);
-                        }, 150);
-                    });
+                                    this.container.scrollTo({
+                                        top: calcTop,
+                                        behavior: 'smooth'
+                                    });
+                                    this.contaScroll = true;
+                                }, 2000);
+                        });
+                    }
+
+                    if (change_onclick) {
+                        this.container.addEventListener("click", (e) => {
+                            let time = e.target.closest(".lyric").getAttribute("data-time");
+                            this.audio.currentTime = (time / 1000) + 0.2;
+                        })
+                    }
+
+                    this.renderLyrics()
+                    if (this.options.animations && this.options.animations.auto_scroll) {
+                        let segap = this.container.querySelectorAll(".segap")
+                        segap.forEach(el => {
+                            el.style.height = '55.5%'
+                            el.style.width = "100%"
+                        })
+                    }
                 }
-
-                if (touch_scroll) {
-                    this.container.addEventListener("touchstart", () => {
-                        if (this.contaScroll) {
-                            this.contaScroll = false;
-                        }
-                    });
-                    this.container.addEventListener("touchend", () => {
-                        waitToSureTimer = setTimeout(() => {
-                                const contaHeight = this.container.offsetHeight;
-                                const lyricEl = this.container.querySelector(".lyric");
-                                const lyricHeight = lyricEl.offsetHeight;
-                                const currentIndex = this.gCurrentLyric?.[2] || 0;
-                                const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
-
-                                this.container.scrollTo({
-                                    top: calcTop,
-                                    behavior: 'smooth'
-                                });
-                                this.contaScroll = true;
-                            }, 2000);
-                    });
-                }
-
-                if (change_onclick) {
-                    this.container.addEventListener("click", (e) => {
-                        let time = e.target.closest(".lyric").getAttribute("data-time");
-                        this.audio.currentTime = (time / 1000) + 0.2;
-                    })
-                }
-
-                this.renderLyrics()
-                if (this.options.animations && this.options.animations.auto_scroll) {
-                    let segap = this.container.querySelectorAll(".segap")
-                    segap.forEach(el => {
-                        el.style.height = '55.5%'
-                        el.style.width = "100%"
-                    })
-                }
+                this.syncLyrics()
+            } else if (type === "sync") {
+                this.container = document.querySelector(this.options.container_selector);
+                this.syncLyrics();
+            } else if (type === "print") {
+                this.renderLyrics();
             }
-            this.syncLyrics()
-        } else if (type === "sync") {
-            this.container = document.querySelector(this.options.container_selector);
-            this.syncLyrics();
-        } else if (type === "print") {
-            this.renderLyrics();
+        }else {
+            console.warn("No valid lyrics found in the provided LRC file.");
         }
     }
     
-
     extractTimeAndText(line) {
         const timeRegex = /\[(\d+):(\d{2})\.(\d{2})\]/g;
         const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
         const times = [];
-        let match, metaMatch;
+        let match;
 
         while ((match = timeRegex.exec(line)) !== null) {
             const [_, min, sec, ms] = match;
@@ -235,19 +235,17 @@ class Lrc {
 
     timeToMilliseconds([min, sec, ms]) {
         return (
-            parseInt(min) * 60 * 1000 +
-            parseInt(sec) * 1000 +
-            parseInt(ms) * 10
+            parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(ms) * 10
         );
     }
 
     renderLyrics() {
         const container = document.querySelector(this.options.container_selector);
-        let isAutoScroll = this.options.animations && this.options.animations.auto_scroll;
+        const isAutoScroll = this.options.animations && this.options.animations.auto_scroll;
         const fragment = document.createDocumentFragment();
 
         if (isAutoScroll) {
-            let start = document.createElement('span')
+            const start = document.createElement('span')
             start.classList.add("segap");
             fragment.appendChild(start);
         }
@@ -261,7 +259,7 @@ class Lrc {
         }
 
         if (isAutoScroll) {
-            let end = document.createElement('span');
+            const end = document.createElement('span');
             end.classList.add("segap");
             fragment.appendChild(end)
         }
@@ -280,8 +278,6 @@ class Lrc {
         }
 
         const CheckAll = () => {
-            console.log("called");
-            
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
                     if (times[(i+1)] >= (currentTime) || i === (times.length - 1)) {
@@ -341,7 +337,7 @@ class Lrc {
         }
 
         const slideSendType = () => {
-            let pervLyric = this.container.querySelectorAll(".active")
+            const pervLyric = this.container.querySelectorAll(".active")
             pervLyric.forEach(lyric => {
                 lyric.classList.remove("active")
             });
@@ -390,13 +386,13 @@ class Lrc {
             }
         }
         function findExactLyric(time, index) {
-            let i = times.indexOf(time);
-            let text = (i>0 ? lyrics[i] : false)
+            const i = times.indexOf(time);
+            const text = (i>0 ? lyrics[i] : false)
             return index ? [text, i] : text
         }
 
-        const timeRegex = /(\d+):(\d{2})\.(\d{2})/;
-        let match = timeRegex.exec(time), askedTime;
+        const timeRegex = /(\d+):(\d{2})\.(\d{2})/ , match = timeRegex.exec(time);
+        let askedTime;
         if (!(match)) {
             askedTime = time
         }else {
@@ -420,13 +416,12 @@ class Lrc {
                 matchedTimesIndexes.push(i);
             }
         }
-        let mtr = matchedTimes;
-        let mtir = matchedTimesIndexes;
+        const mtr = matchedTimes;
+        const mtir = matchedTimesIndexes;
         return index ? [mtr, mtir] : mtr
     }
 
     getCurrent() {
-        //debugger
         if (this.options.type === "sync") {
             return this.gCurrentLyric
         } else {
@@ -436,7 +431,7 @@ class Lrc {
 
     next() {
         if (this.options.type === "sync") {
-            let currentIndex = this.gCurrentLyric?.[2] || 0;
+            const currentIndex = this.gCurrentLyric?.[2] || 0;
             if (currentIndex < this.lyrics.length - 1) {
                 this.audio.currentTime = (this.times[currentIndex + 1] / 1000) + 0.2;
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
@@ -449,7 +444,7 @@ class Lrc {
 
     previous() {
         if (this.options.type === "sync") {
-            let currentIndex = this.gCurrentLyric?.[2] || 0;
+            const currentIndex = this.gCurrentLyric?.[2] || 0;
             if (currentIndex > 0) {
                 this.audio.currentTime = (this.times[currentIndex - 1] / 1000) + 0.2;
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
@@ -477,7 +472,7 @@ class Lrc {
         if (this.options.type === "sync") {
             if (place.time) {
                 if (place.time !== '') {
-                   let lyric = this.searchLyric(place.time, false, true);
+                   const lyric = this.searchLyric(place.time, false, true);
                     this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2; 
                 }else {
                     console.warn("Time is required to go to a specific lyric.");
@@ -491,7 +486,7 @@ class Lrc {
                     lyricText = String(place.lyric);
                     lyricIndex = 0;
                 }
-                let lyricsIndexes = this.searchTime(lyricText, true);
+                const lyricsIndexes = this.searchTime(lyricText, true);
                 this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
             }else if (place.index) {
                 if (place.index !== '' && !isNaN(place.index)) {
