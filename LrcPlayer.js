@@ -125,66 +125,79 @@ class Lrc {
 
         if (type === "extract") {
             // Perform actions for 'extract' type
-        } else if (type === "sync" && this.options.animations && this.options.animations.animation_type === "slide") {
+        } else if (type === "sync") {
             this.container = document.querySelector(this.options.container_selector)
-            this.container.scrollTo({ top: 0 });
-            let scrollEndTimer, waitToSureTimer;
+            if (this.options.animations && this.options.animations.animation_type === "slide") {
+                this.container.scrollTo({ top: 0 });
+                let scrollEndTimer, waitToSureTimer;
+                const wheel_scroll = this.options.animations?.wheel_scroll ?? true, touch_scroll = this.options.animations?.touch_scroll ?? true, change_onclick = this.options.animations?.change_onclick ?? true;
 
-            this.container.addEventListener("wheel", () => {
-                clearTimeout(scrollEndTimer);
-                clearTimeout(waitToSureTimer);
+                if (wheel_scroll) {
+                    this.container.addEventListener("wheel", () => {
+                        clearTimeout(scrollEndTimer);
+                        clearTimeout(waitToSureTimer);
 
-                if (this.contaScroll) {
-                    this.contaScroll = false;
+                        if (this.contaScroll) {
+                            this.contaScroll = false;
+                        }
+
+                        scrollEndTimer = setTimeout(() => {
+                            waitToSureTimer = setTimeout(() => {
+                                const contaHeight = this.container.offsetHeight;
+                                const lyricEl = this.container.querySelector(".lyric");
+                                const lyricHeight = lyricEl.offsetHeight;
+                                const currentIndex = this.gCurrentLyric?.[2] || 0;
+                                const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
+
+                                this.container.scrollTo({
+                                    top: calcTop,
+                                    behavior: 'smooth'
+                                });
+                                this.contaScroll = true;
+                            }, 2000);
+                        }, 150);
+                    });
                 }
 
-                scrollEndTimer = setTimeout(() => {
-                    waitToSureTimer = setTimeout(() => {
-                        const contaHeight = this.container.offsetHeight;
-                        const lyricEl = this.container.querySelector(".lyric");
-                        const lyricHeight = lyricEl.offsetHeight;
-                        const currentIndex = this.gCurrentLyric?.[2] || 0;
-                        const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
+                if (touch_scroll) {
+                    this.container.addEventListener("touchstart", () => {
+                        if (this.contaScroll) {
+                            this.contaScroll = false;
+                        }
+                    });
+                    this.container.addEventListener("touchend", () => {
+                        waitToSureTimer = setTimeout(() => {
+                                const contaHeight = this.container.offsetHeight;
+                                const lyricEl = this.container.querySelector(".lyric");
+                                const lyricHeight = lyricEl.offsetHeight;
+                                const currentIndex = this.gCurrentLyric?.[2] || 0;
+                                const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
 
-                        this.container.scrollTo({
-                            top: calcTop,
-                            behavior: 'smooth'
-                        });
-                        this.contaScroll = true;
-                    }, 2000);
-                }, 150);
-            });
-
-            this.container.addEventListener("touchstart", () => {
-                if (this.contaScroll) {
-                    this.contaScroll = false;
+                                this.container.scrollTo({
+                                    top: calcTop,
+                                    behavior: 'smooth'
+                                });
+                                this.contaScroll = true;
+                            }, 2000);
+                    });
                 }
-            });
-            this.container.addEventListener("touchend", () => {
-                waitToSureTimer = setTimeout(() => {
-                        const contaHeight = this.container.offsetHeight;
-                        const lyricEl = this.container.querySelector(".lyric");
-                        const lyricHeight = lyricEl.offsetHeight;
-                        const currentIndex = this.gCurrentLyric?.[2] || 0;
-                        const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
 
-                        this.container.scrollTo({
-                            top: calcTop,
-                            behavior: 'smooth'
-                        });
-                        this.contaScroll = true;
-                    }, 2000);
-            });
+                if (change_onclick) {
+                    this.container.addEventListener("click", (e) => {
+                        let time = e.target.closest(".lyric").getAttribute("data-time");
+                        this.audio.currentTime = (time / 1000) + 0.2;
+                    })
+                }
 
-            this.renderLyrics()
-            if (this.options.animations && this.options.animations.auto_scroll) {
-                let segap = this.container.querySelectorAll(".segap")
-                segap.forEach(el => {
-                    el.style.height = '55.5%'
-                    el.style.width = "100%"
-                })
+                this.renderLyrics()
+                if (this.options.animations && this.options.animations.auto_scroll) {
+                    let segap = this.container.querySelectorAll(".segap")
+                    segap.forEach(el => {
+                        el.style.height = '55.5%'
+                        el.style.width = "100%"
+                    })
+                }
             }
-
             this.syncLyrics()
         } else if (type === "sync") {
             this.container = document.querySelector(this.options.container_selector);
@@ -230,25 +243,30 @@ class Lrc {
 
     renderLyrics() {
         const container = document.querySelector(this.options.container_selector);
-        let isAutoScroll = this.options.animations && this.options.animations.auto_scroll
+        let isAutoScroll = this.options.animations && this.options.animations.auto_scroll;
+        const fragment = document.createDocumentFragment();
+
         if (isAutoScroll) {
             let start = document.createElement('span')
             start.classList.add("segap");
-            container.appendChild(start);
+            fragment.appendChild(start);
         }
         
-        this.lyrics.forEach(lyric => {
+        for (let i = 0; i < this.lyrics.length; i++) {
             const p = document.createElement("p");
-            p.textContent = lyric;
+            p.textContent = this.lyrics[i];
             p.classList.add("lyric");
-            container.appendChild(p);
-        });
+            p.setAttribute("data-time", this.times[i]);
+            fragment.appendChild(p);
+        }
 
         if (isAutoScroll) {
             let end = document.createElement('span');
             end.classList.add("segap");
-            container.appendChild(end)
+            fragment.appendChild(end)
         }
+
+        container.appendChild(fragment);
     }
 
     syncLyrics() {
@@ -266,7 +284,7 @@ class Lrc {
             
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
-                    if (times[(i+1)] >= (currentTime)) {
+                    if (times[(i+1)] >= (currentTime) || i === (times.length - 1)) {
                         this.sendLyric(animationType, [lyrics[i], i])
                         this.gCurrentLyric = [lyrics[i], times[i], i];
                         lastIndex=[lastIndex[0], currentTime];
@@ -327,8 +345,8 @@ class Lrc {
             pervLyric.forEach(lyric => {
                 lyric.classList.remove("active")
             });
-
-            this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 2)})`).classList.add("active")
+            const index = this.options.animations?.auto_scroll? (lyric[1] + 2) : (lyric[1] + 1);
+            this.container.querySelector(`.lyric:nth-child(${index})`).classList.add("active")
 
             if (this.options.animations.auto_scroll && this.contaScroll) {
                 let contaHeight = this.container.offsetHeight;
@@ -446,7 +464,7 @@ class Lrc {
         if (this.options.type === "sync") {
             if (this.lastPlayedLyric === undefined || this.lastPlayedLyric === null) {
                 console.warn("No last played lyric found.");
-                return;
+                return false;
             }else {
                 this.audio.currentTime = (this.lastPlayedLyric[1] / 1000) + 0.2;
             }
@@ -457,22 +475,30 @@ class Lrc {
 
     goTo(place) {
         if (this.options.type === "sync") {
-            if (place.time && place.time !== '') {
-                let lyric = this.searchLyric(place.time, false, true);
-                this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2;
+            if (place.time) {
+                if (place.time !== '') {
+                   let lyric = this.searchLyric(place.time, false, true);
+                    this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2; 
+                }else {
+                    console.warn("Time is required to go to a specific lyric.");
+                }
             }else if (place.lyric) {
                 let lyricText, lyricIndex;
                 if (Array.isArray(place.lyric)) {
-                    lyricText = place.lyric[0];
+                    lyricText = String(place.lyric[0]);
                     lyricIndex = place.lyric[1] || 0;
                 } else {
-                    lyricText = place.lyric;
+                    lyricText = String(place.lyric);
                     lyricIndex = 0;
                 }
                 let lyricsIndexes = this.searchTime(lyricText, true);
                 this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
-            }else if (place.index && place.index !== '') {
-                this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
+            }else if (place.index) {
+                if (place.index !== '' && !isNaN(place.index)) {
+                    this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
+                }else {
+                    console.warn("Index is required to go to a specific lyric.");
+                }
             }
         }else {
             console.warn("This method is only available for 'sync' type LRCs.");
