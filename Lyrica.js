@@ -1,4 +1,4 @@
-class Lrc {
+class Lyrica {
     constructor(path, options) {
         this.path = path;
         this.options = options;
@@ -367,14 +367,6 @@ class Lrc {
         }
     }
 
-    /**
-     * Searches for a lyric line based on the provided time.
-     *
-     * @param {number|string} time - The time to search for. Can be a number (milliseconds) or a string in the format "mm:ss.xx".
-     * @param {boolean} exact - If true, searches for an exact match of the time; otherwise, finds the closest previous lyric.
-     * @param {boolean} [index=false] - If true, returns an array with the lyric and its index; otherwise, returns only the lyric text.
-     * @returns {string|[string, number]|false} The lyric text, or an array [lyric, index] if `index` is true. Returns `false` if no exact match is found.
-     */
     searchLyric(time, exact, index) {
         const { times, lyrics } = this;
         
