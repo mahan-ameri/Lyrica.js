@@ -345,9 +345,10 @@ class Lyrica {
             this.container.querySelector(`.lyric:nth-child(${index})`).classList.add("active")
 
             if (this.options.animations.auto_scroll && this.contaScroll) {
-                let contaHeight = this.container.offsetHeight;
-                let lyricHeight = this.container.querySelector(".lyric").offsetHeight;
-                let calcTop = ((((lyric[1]+0.6)*lyricHeight) + contaHeight/1.818181) - (contaHeight/2))
+                const contaHeight = this.container.offsetHeight;
+                const lyricHeight = this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 2)})`).offsetHeight;
+                const lyricTop = this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 2)})`).offsetTop;
+                const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)))
                 
                 this.container.scrollTo({
                     top: calcTop,
