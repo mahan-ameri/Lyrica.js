@@ -141,11 +141,12 @@ class Lyrica {
 
                             scrollEndTimer = setTimeout(() => {
                                 waitToSureTimer = setTimeout(() => {
-                                    const contaHeight = this.container.offsetHeight;
-                                    const lyricEl = this.container.querySelector(".lyric");
-                                    const lyricHeight = lyricEl.offsetHeight;
                                     const currentIndex = this.gCurrentLyric?.[2] || 0;
-                                    const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
+                                    const contaHeight = this.container.offsetHeight;
+                                    const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 2)})`);
+                                    const lyricHeight = lyricEl.offsetHeight;
+                                    const lyricTop = lyricEl.offsetTop;
+                                    const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
 
                                     this.container.scrollTo({
                                         top: calcTop,
@@ -165,11 +166,12 @@ class Lyrica {
                         });
                         this.container.addEventListener("touchend", () => {
                             waitToSureTimer = setTimeout(() => {
-                                    const contaHeight = this.container.offsetHeight;
-                                    const lyricEl = this.container.querySelector(".lyric");
-                                    const lyricHeight = lyricEl.offsetHeight;
                                     const currentIndex = this.gCurrentLyric?.[2] || 0;
-                                    const calcTop = (((currentIndex + 0.6) * lyricHeight) + contaHeight / 1.81818181) - (contaHeight / 2);
+                                    const contaHeight = this.container.offsetHeight;
+                                    const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 2)})`);
+                                    const lyricHeight = lyricEl.offsetHeight;
+                                    const lyricTop = lyricEl.offsetTop;
+                                    const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
 
                                     this.container.scrollTo({
                                         top: calcTop,
@@ -282,7 +284,6 @@ class Lyrica {
                 for (let i = 0; i < times.length; i++) {
                     if (times[(i+1)] >= (currentTime) || i === (times.length - 1)) {
                         this.sendLyric(animationType, [lyrics[i], i])
-                        this.gCurrentLyric = [lyrics[i], times[i], i];
                         lastIndex=[lastIndex[0], currentTime];
                         lastIndex[0] = i;
                         break;
@@ -299,7 +300,6 @@ class Lyrica {
                         console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
 
                         this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime);
-                        this.gCurrentLyric = [lyrics[lastIndex[0]], times[lastIndex[0]], lastIndex[0]];
                         lastIndex=[lastIndex[0]+1, currentTime];
                     }else{
                         lastIndex=[lastIndex[0], currentTime];
@@ -358,6 +358,7 @@ class Lyrica {
         }
 
         this.lastPlayedLyric = this.gCurrentLyric;
+        this.gCurrentLyric = [this.lyrics[lyric[1]], this.times[lyric[1]], lyric[1]];
         switch (mode) {
             case "normal":
                 defaultSendType();
