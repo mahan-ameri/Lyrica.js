@@ -7,13 +7,102 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="Lyrica-container"></div>
+    <section>
+        <div class="triple console">
+            <span class="const"><p id="a">const</p><p id="f"> example1</p><p style="color: #D4D4D4;"> =</p><p id="a"> new</p><p id="b"> Lyrica</p><p id="g">(</p><p style="color: #D4D4D4;">...</p><p id="g">)</p><p style="color: #D4D4D4;">;</p></span>
+            <div class="function-board">
+                <span onclick="fgc()"><p id="a">example1</p><p id="b">.getCurrent</p><p id="c">()</p></span>
+                <span><p id="a">example1</p><p id="b">.searchTime</p><p id="c">()</p></span>
+                <span onclick="fgd()"><p id="a">example1</p><p id="b">.getData</p><p id="c">()</p></span>
+                <span onclick="fsl()"><p id="a">example1</p><p id="b">.searchLyric</p><p id="c">(</p><p id="e">"00:58.00"</p><p id="b">, </p><p id="a">false</p><p id="b">, </p><p id="a">true</p><p id="c">)</p></span>
+                <span onclick="fgti()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">index: </p><p id="b">12</p><p id="a">}</p><p id="c">)</p></span>
+                <span onclick="fgtl()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">lyric: </p><p id="g">[</p><p id="e">"No, no, no"</p><p id="b">, </p><p id="b">1</p><p id="g">]</p><p id="a">}</p><p id="c">)</p></span>
+                <span onclick="fgtt()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">time: </p><p id="b">65000</p><p id="a">}</p><p id="c">)</p></span>
+            </div>
+            <div class="cmd-board">
+                <span>$> </span>
+            </div>
+        </div>
+        <div class="triple audio">
+            <div class="controls">
+                <audio src="./aurora_runaway.mp3" id="example_audio" controls></audio>
+                <div class="control-options">
+                    <span onclick="prev()"><p class="icon"><</p><p class="tag">prev</p></span>
+                    <span onclick="next()"><p class="tag">next</p><p class="icon">></p></span>
+                    <span onclick="last()"><p class="icon"><></p><p class="tag">last</p></span>
+                    <p class="name">#example1</p>
+                </div>
+            </div>
+            <div class="lyrica-container"></div>
+        </div>
+        <div class="triple static"></div>
+    </section>
 </body>
     <script src="Lyrica.js"></script>
-    <script>
-        const lyrica = new Lyrica("lyric-texts.lrc", {
-            type: "print",
-            container_selector: "#Lyrica-container"
+    <script type="module">
+        const example = await new Lyrica("./Runaway by Aurora.lrc", {
+            audio_selector: "#example_audio",
+            type: "sync",
+            container_selector: ".lyrica-container",
+            animations: {
+                animation_type: "slide",
+                auto_scroll: true
+            }
         });
+
+        window.next = function() {
+            example.next()
+        }
+        window.prev = function() {
+            example.previous()
+        }
+        window.last = function() {
+            example.last()
+        }
+
+        window.fsl = function() {
+            let text = example.searchLyric("00:58.00", false, true);
+            console.log(text);
+            addToConsole(`["${text[0]}", ${text[1]}]`)
+        }
+        window.fgd = function() {
+            let text = example.getData()
+            console.log(text)
+            addToConsole(`{lyric: (${text.lyrics.length})[...], metadata: {...}, times: (${text.times.length})[...]}`)
+        }
+        window.fgc = function() {
+            let text = example.getCurrent();
+            if (text) {
+                addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`) 
+            }else {
+                addToConsole(text)
+            }
+            console.log(text)
+        }
+        window.fgti = function() {
+            let text = example.goTo({index: 12})
+            console.log(text)
+            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}}]`)
+        }
+        window.fgtl = function() {
+            let text = example.goTo({lyric: ["No, no, no", 1]})
+            console.log(text)
+            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}}]`)
+        }
+        window.fgtt = function() {
+            let text = example.goTo({time: 65000})
+            console.log(text)
+            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}}]`)
+        }
+
+        function addToConsole(what) {
+            const consoleC = document.querySelector(".cmd-board");
+            const el = document.createElement("span");
+            el.textContent = `$> ${what}`;
+            consoleC.appendChild(el)
+            consoleC.scrollTo({
+                top: 1000000
+            })
+        }
     </script>
 </html>

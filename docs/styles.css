@@ -1,0 +1,302 @@
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+body {
+    width: 100vw;
+    height: auto;
+    overflow-x: hidden;
+    background: linear-gradient(to bottom left, rgb(203, 218, 163), rgb(221, 231, 194));
+}
+body::-webkit-scrollbar {
+    display: none;
+}
+#a {
+    color: #439CD6;
+}
+#b {
+    color: #D0DC9D;
+}
+#c {
+    color: #dd00da;
+}
+#e {
+    color: #dc8316;
+}
+#f {
+    color: #4FC1FF;
+}
+#g {
+    color: #DBD700;
+}
+
+
+section {
+    position: relative;
+    width: 94vw;
+    height: auto;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    padding: 4vh 1vw;
+    top: 2vh;
+    left: 50%;
+    transform: translate(-50%, 0);
+    background: transparent;
+}
+
+section div.triple {
+    position: relative;
+    width: 31%;
+    height: 90vh;
+    border-radius: 2vh;
+}
+
+
+section .console {
+    position: relative;
+    border: 0.9vh solid #3c491b;
+    box-shadow: -0.9vh 0.9vh 0px 0vh #3c491b;
+    overflow: hidden;
+    background: #4e5342;
+}
+.console .const {
+    position: relative;
+    top: 2%;
+    left: 7%;
+}
+.console .const p {
+    display: inline;
+    font-size: 2vh;
+    margin-left: auto;
+    margin-right: auto;
+    white-space: pre;
+    font-family: monospace;
+}
+.console .function-board {
+    position: relative;
+    width: 97%;
+    height: 42%;
+    overflow-y: scroll;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-around;
+    align-content: flex-start;
+    gap: 0vh;
+    border-radius: 0.6vh;
+    left: 50%;
+    top: 5%;
+    border: 1px solid #33333395;
+    transform: translateX(-50%);
+    background: rgba(0, 0, 0, 0.1);
+}
+.console .function-board::-webkit-scrollbar {
+    display: none;
+}
+.console .function-board span {
+    width: 94%;
+    height: 15%;
+    overflow-x: scroll;
+    display: flex;
+    align-items: center;
+    justify-content: start;
+    cursor: pointer;
+    user-select: none;
+    padding-left: 0.9vh;
+    border-radius: 0.7vh;
+    border-right: 1px solid #f3f3f3;
+    border-left: 1px solid #f3f3f3;
+    box-shadow: 0 0.4vh 0 0 #f3f3f3;
+    -webkit-tap-highlight-color: transparent;
+    margin-top: 1.3vh;
+    transition: 0.15s;
+    background: #000;
+}
+.console .function-board span::-webkit-scrollbar {
+    display: none;
+}
+.console .function-board span:active {
+    box-shadow: 0 1px 0 0 #f3f3f3;
+    transform: translateY(0.4vh);
+}
+
+.console .function-board span p {
+    font-family: monospace;
+    font-size: 1.6vh;
+    white-space: pre;
+}
+.console .cmd-board {
+    position: absolute;
+    width: 97%;
+    height: 42%;
+    overflow: scroll;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    bottom: 2%;
+    left: 50%;
+    transform: translateX(-50%);
+    padding-top: 1%;
+    border-radius: 0.6vh;
+    background: #000;
+}
+.console .cmd-board::-webkit-scrollbar {
+    display: none;
+}
+.console .cmd-board span {
+    min-width: 100%;
+    width: auto;
+    height: 7%;
+    display: inline-block;
+    white-space: nowrap;
+    font-family: monospace;
+    font-size: 2vh;
+    padding-left: 2%;
+    text-justify: center;
+    color: #2bce1c;
+}
+
+
+section .static {
+    border: 0.9vh solid #add838;
+    box-shadow: 0.9vh 0.9vh 0px 0vh #556625;
+}
+
+
+section .audio {
+    border: 0.9vh solid #add838;
+    box-shadow: 0vh 0.4vh 0px 0.5vh #556625;
+}
+.audio .controls {
+    width: 100%;
+    height: 12%;
+    min-height: 20px;
+    padding-bottom: 0.3vh;
+    background: #add838;
+}
+.audio .controls audio {
+        width: 100%;
+        height: 50%;
+}
+.audio .controls audio::-webkit-media-controls-panel {
+    border: none;
+    background: #add838;
+}
+.audio .controls audio::-webkit-media-controls-enclosure {
+    border-radius: 0;
+    background: transparent;
+}
+.audio .controls .control-options {
+    position: relative;
+    width: 100%;
+    height: 50%;
+    display: flex;
+    background: transparent;
+}
+.audio .controls .control-options span {
+    width: 17%;
+    height: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    font-family: monospace;
+    font-size: 1.6vh;
+    user-select: none;
+    cursor: pointer;
+    margin-left: 1%;
+    border-radius: 0.5vh;
+    transition: 0.15s;
+    background: rgba(15, 97, 31, 0.05);
+}
+.audio .controls .control-options span:hover {
+    background: rgba(15, 97, 31, 0.08);
+}
+.audio .controls .control-options span:active {
+    cursor: default;
+    transform: scale(0.9);
+}
+.audio .controls .control-options p.name {
+    position: absolute;
+    height: 80%;
+    width: 22%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #00b7ef;
+    font-family: monospace;
+    font-size: 1.6vh;
+    right: 6%;
+    text-shadow: 1px 2px 0px #333;
+}
+
+.audio .lyrica-container {
+    position: relative;
+    width: 100%;
+    height: 88%;
+    overflow-y: scroll;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    box-shadow: 0 0 0.9vh -0.4vh #333 inset;
+    border-radius: 0.5vh 0.5vh 1vh 1vh;
+    background: transparent;
+}
+.audio .lyrica-container::-webkit-scrollbar {
+    display: none;
+}
+.audio .lyrica-container .lyric {
+    width: 80%;
+    margin-top: 3vh;
+    opacity: 0.6;
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    font-size: 1.7vh;
+    font-family: monospace;
+    transition: 0.1s;
+}
+.audio .lyrica-container .lyric.active {
+    font-weight: bold;
+    opacity: 1;
+    font-size: 2.3vh;
+}
+
+@media screen and (max-width: 1100px) and (min-width: 530px) {
+    section {
+        width: 98vw;
+        top: 0;
+        padding-top: 2vh;
+    }
+    section .console, section .audio {
+        height: 76vh !important;
+        width: 47% !important;
+    }
+    section .static {
+        width: 94vw !important;
+        height: 46vw !important;
+        margin-top: 3.1vw;
+        box-shadow: 0vh 0.4vh 0px 0.5vh #556625;
+    }
+
+    .console .const p {
+        font-size: 2vw !important;
+    }
+}
+@media screen and (max-width: 530px) {
+    section {
+        width: 100vw;
+        top: 0;
+        padding-top: 0;
+    }
+    section .audio {
+        order: -1;
+        margin-top: 1vw !important;
+    }
+    section .console, section .audio, section .static {
+        width: 98% !important;
+        height: 77vh !important;
+        margin-top: 3vh;
+        box-shadow: 0vh 0.4vh 0px 0.5vh #556625;
+    }
+}
