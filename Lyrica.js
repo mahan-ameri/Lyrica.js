@@ -160,6 +160,7 @@ class Lyrica {
 
                     if (touch_scroll) {
                         this.container.addEventListener("touchstart", () => {
+                            clearTimeout(waitToSureTimer)
                             if (this.contaScroll) {
                                 this.contaScroll = false;
                             }
@@ -184,8 +185,11 @@ class Lyrica {
 
                     if (change_onclick) {
                         this.container.addEventListener("click", (e) => {
-                            let time = e.target.closest(".lyric").getAttribute("data-time");
-                            this.audio.currentTime = (time / 1000) + 0.2;
+                            const lyric = e.target.closest(".lyric");
+                            if (lyric !== null) {
+                                let time = lyric.getAttribute("data-time");
+                                this.audio.currentTime = (time / 1000) + 0.2;
+                            }
                         })
                     }
 
@@ -297,7 +301,7 @@ class Lyrica {
                 if (Math.abs(currentTime-lastIndex[1])<70) {
                     if (times[lastIndex[0]]+400<=currentTime) {
 
-                        console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
+                        //console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
 
                         this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime);
                         lastIndex=[lastIndex[0]+1, currentTime];
@@ -467,7 +471,8 @@ class Lyrica {
             if (place.time) {
                 if (place.time !== '') {
                    const lyric = this.searchLyric(place.time, false, true);
-                    this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2; 
+                    this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2;
+                    return [lyric[0], this.times[lyric[1]], lyric[1]]
                 }else {
                     console.warn("Time is required to go to a specific lyric.");
                 }
@@ -482,9 +487,11 @@ class Lyrica {
                 }
                 const lyricsIndexes = this.searchTime(lyricText, true);
                 this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
+                return [lyricText, this.times[lyricsIndexes[1][lyricIndex]], lyricsIndexes[1][lyricIndex]];
             }else if (place.index) {
                 if (place.index !== '' && !isNaN(place.index)) {
                     this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
+                    return [this.lyrics[place.index], this.times[place.index], place.index]
                 }else {
                     console.warn("Index is required to go to a specific lyric.");
                 }
