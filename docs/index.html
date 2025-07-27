@@ -18,6 +18,8 @@
                 <span onclick="fgti()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">index: </p><p id="b">12</p><p id="a">}</p><p id="c">)</p></span>
                 <span onclick="fgtl()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">lyric: </p><p id="g">[</p><p id="e">"No, no, no"</p><p id="b">, </p><p id="b">1</p><p id="g">]</p><p id="a">}</p><p id="c">)</p></span>
                 <span onclick="fgtt()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">time: </p><p id="b">65000</p><p id="a">}</p><p id="c">)</p></span>
+                <span onclick="fnx()"><p id="a">example1</p><p id="b">.next</p><p id="c">(</p><p id="b">3</p><p id="c">)</p></span>
+                <span onclick="fpr()"><p id="a">example1</p><p id="b">.pervious</p><p id="c">(</p><p id="b">2</p><p id="c">)</p></span>
             </div>
             <div class="cmd-board">
                 <span>$> </span>
@@ -38,7 +40,7 @@
         <div class="triple static"></div>
     </section>
 </body>
-    <script src="Lyrica.js"></script>
+    <script src="../Lyrica.js"></script>
     <script type="module">
         const example = await new Lyrica("./Runaway by Aurora.lrc", {
             audio_selector: "#example_audio",
@@ -82,17 +84,36 @@
         window.fgti = function() {
             let text = example.goTo({index: 12})
             console.log(text)
-            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}}]`)
+            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
         }
         window.fgtl = function() {
             let text = example.goTo({lyric: ["No, no, no", 1]})
             console.log(text)
-            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}}]`)
+            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
         }
         window.fgtt = function() {
             let text = example.goTo({time: 65000})
             console.log(text)
-            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}}]`)
+            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
+        }
+        window.fnx = function() {
+            let text = example.next(3)
+            console.log(text)
+            if (text !== undefined) {
+                addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
+            }else {
+                addToConsole(text)
+            }
+        }
+        window.fpr = function() {
+            let text = example.previous(2)
+            console.log(text)
+            if (text !== undefined) {
+                addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
+            }else {
+                addToConsole(text)
+            }
+            
         }
 
         function addToConsole(what) {

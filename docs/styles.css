@@ -87,6 +87,7 @@ section .console {
     border-radius: 0.6vh;
     left: 50%;
     top: 5%;
+    padding-bottom: 1.3vh;
     border: 1px solid #33333395;
     transform: translateX(-50%);
     background: rgba(0, 0, 0, 0.1);
@@ -151,7 +152,7 @@ section .console {
     display: inline-block;
     white-space: nowrap;
     font-family: monospace;
-    font-size: 2vh;
+    font-size: 1.5vh;
     padding-left: 2%;
     text-justify: center;
     color: #2bce1c;

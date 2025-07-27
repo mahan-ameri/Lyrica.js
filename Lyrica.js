@@ -427,26 +427,36 @@ class Lyrica {
         }
     }
 
-    next() {
+    next(dis) {
         if (this.options.type === "sync") {
             const currentIndex = this.gCurrentLyric?.[2] || 0;
-            if (currentIndex < this.lyrics.length - 1) {
-                this.audio.currentTime = (this.times[currentIndex + 1] / 1000) + 0.2;
+            const dist = dis || 1;
+            if (currentIndex < this.lyrics.length - dist) {
+                const i =currentIndex + dist
+                this.audio.currentTime = (this.times[i] / 1000) + 0.2;
+                return [this.lyrics[i], this.times[i], i];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
                 // this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
+            }else {
+                return undefined
             }
         } else {
             console.warn("This method is only available for 'sync' type LRCs.");
         }
     }
 
-    previous() {
+    previous(dis) {
         if (this.options.type === "sync") {
             const currentIndex = this.gCurrentLyric?.[2] || 0;
-            if (currentIndex > 0) {
-                this.audio.currentTime = (this.times[currentIndex - 1] / 1000) + 0.2;
+            const dist = dis || 1;
+            if (currentIndex >= dist) {
+                const i = currentIndex - dist;
+                this.audio.currentTime = (this.times[i] / 1000) + 0.2;
+                return [this.lyrics[i], this.times[i], i];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
                 // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
+            }else {
+                return undefined
             }
         } else {
             console.warn("This method is only available for 'sync' type LRCs.");
@@ -457,9 +467,10 @@ class Lyrica {
         if (this.options.type === "sync") {
             if (this.lastPlayedLyric === undefined || this.lastPlayedLyric === null) {
                 console.warn("No last played lyric found.");
-                return false;
+                return undefined;
             }else {
                 this.audio.currentTime = (this.lastPlayedLyric[1] / 1000) + 0.2;
+                return this.lastPlayedLyric;
             }
         }else {
             console.warn("This method is only available for 'sync' type LRCs.");
