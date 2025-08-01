@@ -473,7 +473,6 @@ class Lyrica {
     last() {
         if (this.options.type === "sync") {
             if (this.lastPlayedLyric === undefined || this.lastPlayedLyric === null) {
-                console.warn("No last played lyric found.");
                 return undefined;
             }else {
                 this.audio.currentTime = (this.lastPlayedLyric[1] / 1000) + 0.2;
@@ -492,7 +491,7 @@ class Lyrica {
                     this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2;
                     return [lyric[0], this.times[lyric[1]], lyric[1]]
                 }else {
-                    console.warn("Time is required to go to a specific lyric.");
+                    return undefined
                 }
             }else if (place.lyric) {
                 let lyricText, lyricIndex;
@@ -508,7 +507,6 @@ class Lyrica {
                     this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
                     return [lyricText, this.times[lyricsIndexes[1][lyricIndex]], lyricsIndexes[1][lyricIndex]];
                 }else {
-                    console.warn(`Lyric "${lyricText}" not found.`);
                     return undefined;
                 }
                 
@@ -517,7 +515,7 @@ class Lyrica {
                     this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
                     return [this.lyrics[place.index], this.times[place.index], place.index]
                 }else {
-                    console.warn("Index is required to go to a specific lyric.");
+                    return undefined
                 }
             }
         }else {
