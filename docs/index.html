@@ -16,7 +16,7 @@
                 <span onclick="fgd()"><p id="a">example1</p><p id="b">.getData</p><p id="c">()</p></span>
                 <span onclick="fsl()"><p id="a">example1</p><p id="b">.searchLyric</p><p id="c">(</p><p id="e">"00:58.00"</p><p id="b">, </p><p id="a">false</p><p id="b">, </p><p id="a">true</p><p id="c">)</p></span>
                 <span onclick="fgti()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">index: </p><p id="b">12</p><p id="a">}</p><p id="c">)</p></span>
-                <span onclick="fgtl()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">lyric: </p><p id="g">[</p><p id="e">"No, no, no"</p><p id="b">, </p><p id="b">1</p><p id="g">]</p><p id="a">}</p><p id="c">)</p></span>
+                <span onclick="fgtl()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">lyric: </p><p id="g">[</p><p id="e">" Only a path"</p><p id="b">, </p><p id="b">1</p><p id="g">]</p><p id="a">}</p><p id="c">)</p></span>
                 <span onclick="fgtt()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">time: </p><p id="b">65000</p><p id="a">}</p><p id="c">)</p></span>
                 <span onclick="fnx()"><p id="a">example1</p><p id="b">.next</p><p id="c">(</p><p id="b">3</p><p id="c">)</p></span>
                 <span onclick="fpr()"><p id="a">example1</p><p id="b">.pervious</p><p id="c">(</p><p id="b">2</p><p id="c">)</p></span>
@@ -27,7 +27,19 @@
         </div>
         <div class="triple audio">
             <div class="controls">
-                <audio src="./aurora_runaway.mp3" id="example_audio" controls></audio>
+                <div class="song-info">
+                    <span class="cover">
+                        <img src="./res/Grateful_NEFFEX.jpg" alt="song cover">
+                    </span>
+                    <span class="info">
+                        <p class="title">Grateful</p>
+                        <p class="artist">by NEFFEX | single</p>
+                    </span>
+                    <a href="https://open.spotify.com/track/1e6aAbWR0MXCNcr4yQovNr" class="link">
+                        <img src="./res/link_icon.png" alt="link">
+                    </a>
+                </div>
+                <audio src="./res/Grateful_NEFFEX.mp3" id="example_audio" controls></audio>
                 <div class="control-options">
                     <span onclick="prev()"><p class="icon"><</p><p class="tag">prev</p></span>
                     <span onclick="next()"><p class="tag">next</p><p class="icon">></p></span>
@@ -37,12 +49,33 @@
             </div>
             <div class="lyrica-container"></div>
         </div>
-        <div class="triple static"></div>
+        <div class="triple static">
+            <div class="top">
+                <div class="intro">
+                    <div class="song-info">
+                        <span class="cover">
+                            <img src="./res/From_Aemia.jpg" alt="song cover">
+                        </span>
+                        <span class="info">
+                            <p class="title">From</p>
+                            <p class="artist">by Aemia | single</p>
+                        </span>
+                        <a href="https://open.spotify.com/track/1VjL8Nq6p15RGOUtdJvSsa" class="link">
+                            <img src="./res/link_icon.png" alt="link">
+                        </a>
+                    </div>
+                </div>
+                <div id="lyrica-container2">
+                    <span id="load"><p>Load Lyric</p></span>
+                </div>
+            </div>
+            <div class="bottom"></div>
+        </div>
     </section>
 </body>
     <script src="../Lyrica.js"></script>
     <script type="module">
-        const example = await new Lyrica("./Runaway by Aurora.lrc", {
+        const example = await new Lyrica("./res/Grateful_NEFFEX.lrc", {
             audio_selector: "#example_audio",
             type: "sync",
             container_selector: ".lyrica-container",
@@ -51,6 +84,13 @@
                 auto_scroll: true
             }
         });
+
+        document.getElementById("load").addEventListener("click" ,()=>{
+            const print = new Lyrica("./res/From_Aemia.lrc", {
+                type: "print",
+                container_selector: "#lyrica-container2"
+            })
+        })
 
         window.next = function() {
             example.next()
@@ -87,9 +127,14 @@
             addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
         }
         window.fgtl = function() {
-            let text = example.goTo({lyric: ["No, no, no", 1]})
+            let text = example.goTo({lyric: [" Only a path", 1]});
             console.log(text)
-            addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
+            if (text !== undefined) {
+                addToConsole(`["${text[0]}", ${text[1]}, ${text[2]}]`)
+            }else {
+                addToConsole(text)
+            }
+            
         }
         window.fgtt = function() {
             let text = example.goTo({time: 65000})

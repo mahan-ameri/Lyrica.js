@@ -2,6 +2,7 @@ class Lyrica {
     constructor(path, options) {
         this.path = path;
         this.options = options;
+        this.isRaw = this.options.isRaw || false;
         this.times = [];
         this.lyrics = [];
         this.metadata = {};
@@ -21,10 +22,10 @@ class Lyrica {
     }
 
     validatePath() {
-        if (typeof this.path !== "string" || this.path === "" && !this.options.isRaw) {
+        if (typeof this.path !== "string" || this.path === "" && !this.isRaw) {
             throw new Error("File's path is required and should be a string.");
         }
-        if (!this.path.endsWith(".lrc") && !this.options.isRaw) {
+        if (!this.path.endsWith(".lrc") && !this.isRaw) {
             throw new Error("File's path should have a valid '.lrc' format.");
         }
     }
@@ -80,9 +81,12 @@ class Lyrica {
         return LrcAsync;
     }
     async init() {
-        if (!this.options.isRaw) {
+        if (!this.isRaw) {
             try {
                 const response = await fetch(this.path);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
                 const lrcText = await response.text();
                 this.extractLrc(lrcText);
             } catch (error) {
@@ -299,7 +303,7 @@ class Lyrica {
             interval = setInterval(() => {
                 let currentTime = audio.currentTime * 1000;
                 if (Math.abs(currentTime-lastIndex[1])<70) {
-                    if (times[lastIndex[0]]+400<=currentTime) {
+                    if (times[lastIndex[0]]<=currentTime) {
 
                         //console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
 
@@ -497,8 +501,14 @@ class Lyrica {
                     lyricIndex = 0;
                 }
                 const lyricsIndexes = this.searchTime(lyricText, true);
-                this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
-                return [lyricText, this.times[lyricsIndexes[1][lyricIndex]], lyricsIndexes[1][lyricIndex]];
+                if (lyricsIndexes[1].length >= 0 && lyricsIndexes[1][lyricIndex] !== undefined) {
+                    this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
+                    return [lyricText, this.times[lyricsIndexes[1][lyricIndex]], lyricsIndexes[1][lyricIndex]];
+                }else {
+                    console.warn(`Lyric "${lyricText}" not found.`);
+                    return undefined;
+                }
+                
             }else if (place.index) {
                 if (place.index !== '' && !isNaN(place.index)) {
                     this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
