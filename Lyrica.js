@@ -124,6 +124,8 @@ class Lyrica {
         this.lyrics = entries.map(entry => entry.lyric);
 
         const type = this.options.type;
+        this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
+
         if (this.times.length !== 0) {
             if (type === "extract") {
                 // Perform actions for 'extract' type
@@ -219,7 +221,7 @@ class Lyrica {
     }
     
     extractTimeAndText(line) {
-        const timeRegex = /\[(\d+):(\d{2})\.(\d{2})\]/g;
+        const timeRegex = /\[(\d+):(\d{2})\.(\d{1,5})\]/g;
         const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
         const times = [];
         let match;
@@ -250,6 +252,7 @@ class Lyrica {
     }
 
     renderLyrics() {
+        const { times, lyrics, offset} = this;
         const container = document.querySelector(this.options.container_selector);
         const isAutoScroll = this.options.animations && this.options.animations.auto_scroll;
         const fragment = document.createDocumentFragment();
@@ -260,11 +263,11 @@ class Lyrica {
             fragment.appendChild(start);
         }
         
-        for (let i = 0; i < this.lyrics.length; i++) {
+        for (let i = 0; i < lyrics.length; i++) {
             const p = document.createElement("p");
-            p.textContent = this.lyrics[i];
+            p.textContent = lyrics[i];
             p.classList.add("lyric");
-            p.setAttribute("data-time", this.times[i]);
+            p.setAttribute("data-time", (times[i] - offset));
             fragment.appendChild(p);
         }
 
@@ -278,7 +281,7 @@ class Lyrica {
     }
 
     syncLyrics() {
-        const { times, lyrics, audio} = this;
+        const { times, lyrics, audio, offset} = this;
         const animationType = this.options?.animations?.animation_type || "normal";
         let lastIndex = [0, 0];
         let interval;
@@ -290,7 +293,7 @@ class Lyrica {
         const CheckAll = () => {
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
-                    if (times[(i+1)] >= (currentTime) || i === (times.length - 1)) {
+                    if (times[(i+1)] - offset >= (currentTime) || i === (times.length - 1)) {
                         this.sendLyric(animationType, [lyrics[i], i])
                         lastIndex=[lastIndex[0], currentTime];
                         lastIndex[0] = i;
@@ -303,7 +306,7 @@ class Lyrica {
             interval = setInterval(() => {
                 let currentTime = audio.currentTime * 1000;
                 if (Math.abs(currentTime-lastIndex[1])<70) {
-                    if (times[lastIndex[0]]<=currentTime) {
+                    if (times[lastIndex[0]] - offset  <=currentTime) {
 
                         //console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
 

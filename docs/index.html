@@ -78,6 +78,7 @@
         const example = await new Lyrica("./res/Grateful_NEFFEX.lrc", {
             audio_selector: "#example_audio",
             type: "sync",
+            offset: 100,
             container_selector: ".lyrica-container",
             animations: {
                 animation_type: "slide",
@@ -110,6 +111,7 @@
         window.fgd = function() {
             let text = example.getData()
             console.log(text)
+            example.offset = 1000
             addToConsole(`{lyric: (${text.lyrics.length})[...], metadata: {...}, times: (${text.times.length})[...]}`)
         }
         window.fgc = function() {
