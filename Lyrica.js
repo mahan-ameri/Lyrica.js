@@ -2,12 +2,13 @@ class Lyrica {
     constructor(path, options) {
         this.path = path;
         this.options = options;
-        this.isRaw = this.options.isRaw || false;
         this.times = [];
         this.lyrics = [];
         this.metadata = {};
         this.gCurrentLyric, this.lastPlayedLyric;
+        this.isRaw = this.options.isRaw || false;
         this.contaScroll = true;
+        this.karaoke = this.options.isKaraoke || false;
         this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
     }
@@ -107,8 +108,10 @@ class Lyrica {
         const lines = lrcText.split(/\r?\n|\r|\n/g);
 
         lines.forEach(line => {
-            const { times, text } = this.extractTimeAndText(line);
-            if (times.length > 0) {
+            const ret = this.extractTimeAndText(line);
+            
+            if (ret[0]) {
+                const { times, text } = ret[1];
                 for (const timeArr of times) {
                     const millis = this.timeToMilliseconds(timeArr);
                     if (!isNaN(millis)) {
@@ -229,25 +232,28 @@ class Lyrica {
         const timeRegex = /\[(\d+):(\d{2})\.(\d{1,5})\]/g;
         const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
         const times = [];
-        let match;
+        let match, isValid = false, text;
 
         while ((match = timeRegex.exec(line)) !== null) {
+            isValid = true;
             const [_, min, sec, ms] = match;
             times.push([min, sec, ms]);
         }
-
-        const lastMatch = [...line.matchAll(timeRegex)].pop();
-        const text = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : line;
-
-        if (!timeRegex.exec(line) && line !== '') {
+        if (isValid) {
+            const lastMatch = [...line.matchAll(timeRegex)].pop();
+            text = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;
+            if (text !== false) {
+                //karaoke stuffs
+            }
+        }else if (line !== '') {
             const meta = metaRegex.exec(line);
             if (meta) {
                 this.metadata[meta[1]] = meta[2]
             }
-    }
+        }
 
-
-        return { times, text };
+        return [isValid, isValid ? { times, text } : null];
+        
     }
 
     timeToMilliseconds([min, sec, ms]) {
