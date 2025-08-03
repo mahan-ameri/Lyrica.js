@@ -123,8 +123,13 @@ class Lyrica {
         this.times = entries.map(entry => entry.time);
         this.lyrics = entries.map(entry => entry.lyric);
 
-        const type = this.options.type;
         this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
+        
+        this.typesHandler()
+    }
+
+    typesHandler() {
+        const type = this.options.type;
 
         if (this.times.length !== 0) {
             if (type === "extract") {
@@ -386,14 +391,14 @@ class Lyrica {
         function findLyric(time, index) {
             for (let i = 0; i < times.length; i++) {
                 if (times[i] > (time)) {
-                    return index ? [lyrics[(i-1)], i-1] : lyrics[(i-1)]
+                    return index ? [lyrics[(i-1)], i-1] : [lyrics[(i-1)]]
                 }
             }
         }
         function findExactLyric(time, index) {
             const i = times.indexOf(time);
             const text = (i>0 ? lyrics[i] : false)
-            return index ? [text, i] : text
+            return index ? [text, i] : [text]
         }
 
         const timeRegex = /(\d+):(\d{2})\.(\d{2})/ , match = timeRegex.exec(time);
@@ -421,9 +426,8 @@ class Lyrica {
                 matchedTimesIndexes.push(i);
             }
         }
-        const mtr = matchedTimes;
-        const mtir = matchedTimesIndexes;
-        return index ? [mtr, mtir] : mtr
+
+        return index ? [matchedTimes, matchedTimesIndexes] : [matchedTimes]
     }
 
     getCurrent() {

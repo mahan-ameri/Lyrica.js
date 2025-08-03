@@ -242,7 +242,6 @@ section .audio {
     height: 95%;
     aspect-ratio: 1 / 1;
     display: flex;
-    margin-left: 5%;
 }
 .song-info .cover img {
     width: 100%;
