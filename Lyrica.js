@@ -4,11 +4,12 @@ class Lyrica {
         this.options = options;
         this.times = [];
         this.lyrics = [];
+        this.lyricsCounter = []
         this.metadata = {};
         this.gCurrentLyric, this.lastPlayedLyric;
         this.isRaw = this.options.isRaw || false;
         this.contaScroll = true;
-        this.karaoke = this.options.isKaraoke || false;
+        this.karaoke = this.options.isKaraoke ?? false;
         this.audio = document.querySelector(this.options.audio_selector);
         this.validateInputs();
     }
@@ -111,11 +112,21 @@ class Lyrica {
             const ret = this.extractTimeAndText(line);
             
             if (ret[0]) {
-                const { times, text } = ret[1];
+                const { times, text, counter } = ret[1];
+                if (this.karaoke) {
+                    const karoakeTimes = times.pop();
+                    for (const timeArr of karoakeTimes) {
+                        const millis = this.timeToMilliseconds(timeArr);
+                        if (!isNaN(millis)) {
+                            entries.push({ time: millis});
+                        }
+                    }
+                }
+                
                 for (const timeArr of times) {
                     const millis = this.timeToMilliseconds(timeArr);
                     if (!isNaN(millis)) {
-                        entries.push({ time: millis, lyric: text });
+                        entries.push({ time: millis, lyric: text, counter: counter });
                     }
                 }
             }
@@ -124,7 +135,9 @@ class Lyrica {
         entries.sort((a, b) => a.time - b.time);
 
         this.times = entries.map(entry => entry.time);
-        this.lyrics = entries.map(entry => entry.lyric);
+        this.lyrics = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
+        this.lyricsCounter = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
+
 
         this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
         
@@ -231,8 +244,9 @@ class Lyrica {
     extractTimeAndText(line) {
         const timeRegex = /\[(\d+):(\d{2})\.(\d{1,5})\]/g;
         const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
-        const times = [];
-        let match, isValid = false, text;
+        const karaokeRegex = /<(\d{2}):(\d{2})\.(\d{2,3})>([^<]*)/g;
+        const times = [], texts = [];
+        let match, isValid = false, textSingle, counters;
 
         while ((match = timeRegex.exec(line)) !== null) {
             isValid = true;
@@ -241,25 +255,35 @@ class Lyrica {
         }
         if (isValid) {
             const lastMatch = [...line.matchAll(timeRegex)].pop();
-            text = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;
-            if (text !== false) {
-                //karaoke stuffs
+            textSingle = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;
+            if (textSingle !== false && this.karaoke) {
+                let match;
+                const karoakeTimes = []
+                while ((match = karaokeRegex.exec(line)) !== null) {
+                    const [_, min, sec, ms] = match;
+                    karoakeTimes.push([min, sec, ms]);
+                    texts.push(match[4]);
+                }
+                times.push(karoakeTimes);
+                counters = texts.length
             }
         }else if (line !== '') {
             const meta = metaRegex.exec(line);
             if (meta) {
-                this.metadata[meta[1]] = meta[2]
+                this.metadata[meta[1]] = meta[2];
             }
         }
 
-        return [isValid, isValid ? { times, text } : null];
+        const text = this.karaoke ? texts.length > 0 ? texts : [textSingle] : textSingle, counter = this.karaoke ? counters : null ;
+        
+
+        return [isValid, isValid ? { times, text, counter} : null];
         
     }
 
     timeToMilliseconds([min, sec, ms]) {
-        return (
-            parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(ms) * 10
-        );
+        const paddedMs = ms.padEnd(3, '0').slice(0, 3);
+        return ( parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(paddedMs) );
     }
 
     renderLyrics() {
@@ -534,6 +558,6 @@ class Lyrica {
     }
 
     getData() {
-        return {"lyrics": this.lyrics, "times": this.times, "metadata": this.metadata}
+        return {"lyrics": this.lyrics, "lyricsCounter": this.lyricsCounter, "times": this.times, "metadata": this.metadata}
     }
 }
