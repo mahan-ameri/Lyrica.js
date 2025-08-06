@@ -192,11 +192,53 @@ section .static {
     width: 100%;
     height: 74%;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    padding: 0 3vh;
     box-shadow: 0 0 0.9vh -0.4vh #333 inset;
     border-radius: 0.5vh 0.5vh 1vh 1vh;
 }
+.top #lyrica-container2::-webkit-scrollbar {
+    width: 0.9vh;
+}  
+.top #lyrica-container2::-webkit-scrollbar-track {
+    background-color: transparent;
+    border: 0.3vh solid #7e7e7e;
+    border-radius: 0.5vh;
+}
+.top #lyrica-container2::-webkit-scrollbar-thumb {
+    background-color: transparent;
+    border: 2px solid #616161;
+    border-radius: 0.5vh;
+}
+
+.top #lyrica-container2 .lyric {
+    position: relative;
+    height: auto;
+    display: block;
+    text-align: center;
+    font-size: 2.1vh;
+    font-family: monospace;
+    padding: 1vh 2vh;
+    margin-top: 0.6vh;
+    margin-bottom: 0.6vh;
+    border-radius: 0.8vh;
+    background: rgba(79, 147, 69, 0.2);
+}
+.top #lyrica-container2 .lyric:first-child {
+    margin-top: 6vh;
+}
+.top #lyrica-container2 .lyric:last-child {
+    margin-bottom: 6vh;
+}
+.top #lyrica-container2 .lyric p {
+    white-space: pre;
+    display: inline-flex;
+    justify-content: center;
+}
+
 .top #lyrica-container2 #load {
     position: absolute;
     top: 50%;
@@ -212,6 +254,7 @@ section .static {
 
 .static .bottom {
     height: 39%;
+    background: transparent;
 }
 
 

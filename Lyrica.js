@@ -7,10 +7,8 @@ class Lyrica {
         this.lyricsCounter = []
         this.metadata = {};
         this.gCurrentLyric, this.lastPlayedLyric;
-        this.isRaw = this.options.isRaw || false;
         this.contaScroll = true;
-        this.karaoke = this.options.isKaraoke ?? false;
-        this.audio = document.querySelector(this.options.audio_selector);
+
         this.validateInputs();
     }
 
@@ -47,6 +45,11 @@ class Lyrica {
         if (missingOptions.length > 0) {
             throw new Error(`Required attributes are missing: "${missingOptions.join('", "')}"`);
         }
+
+        this.karaoke = this.options.isKaraoke ?? false;
+        this.actKaraoke = this.options.actKaraoke ?? false;
+        this.audio = document.querySelector(this.options.audio_selector);
+        this.isRaw = this.options.isRaw || false;
     }
 
     getRequiredOptionsByType() {
@@ -257,9 +260,11 @@ class Lyrica {
             const lastMatch = [...line.matchAll(timeRegex)].pop();
             textSingle = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;
             if (textSingle !== false && this.karaoke) {
+                const fLine = line.replace(/\[[a-zA-Z0-9_]+:.*?\]/g, '');
+
                 let match;
                 const karoakeTimes = []
-                while ((match = karaokeRegex.exec(line)) !== null) {
+                while ((match = karaokeRegex.exec(fLine)) !== null) {
                     const [_, min, sec, ms] = match;
                     karoakeTimes.push([min, sec, ms]);
                     texts.push(match[4]);
@@ -298,13 +303,33 @@ class Lyrica {
             fragment.appendChild(start);
         }
         
-        for (let i = 0; i < lyrics.length; i++) {
-            const p = document.createElement("p");
-            p.textContent = lyrics[i];
-            p.classList.add("lyric");
-            p.setAttribute("data-time", (times[i] - offset));
-            fragment.appendChild(p);
+        if (this.karaoke) {
+            for (let i = 0; i < lyrics.length; i++) {
+                const elType = this.actKaraoke ? "div" : "p"
+                const p = document.createElement(elType);
+                if (this.actKaraoke) {
+                    lyrics[i].forEach(el => {
+                        const litt = document.createElement("p");
+                        litt.textContent = el;
+                        p.appendChild(litt)
+                    });
+                }else {
+                    p.textContent = String(lyrics[i].join(''));
+                }
+                p.classList.add("lyric");
+                p.setAttribute("data-time", (times[i] - offset));
+                fragment.appendChild(p);
+            }
+        }else {
+            for (let i = 0; i < lyrics.length; i++) {
+                const p = document.createElement("p");
+                p.textContent = lyrics[i];
+                p.classList.add("lyric");
+                p.setAttribute("data-time", (times[i] - offset));
+                fragment.appendChild(p);
+            }
         }
+        
 
         if (isAutoScroll) {
             const end = document.createElement('span');
