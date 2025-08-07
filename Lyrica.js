@@ -4,7 +4,7 @@ class Lyrica {
         this.options = options;
         this.times = [];
         this.lyrics = [];
-        this.lyricsCounter = []
+        this.lyricsCounts = []
         this.metadata = {};
         this.gCurrentLyric, this.lastPlayedLyric;
         this.contaScroll = true;
@@ -116,7 +116,7 @@ class Lyrica {
             
             if (ret[0]) {
                 const { times, text, counter } = ret[1];
-                if (this.karaoke) {
+                if (this.karaoke && this.actKaraoke) {
                     const karoakeTimes = times.pop();
                     for (const timeArr of karoakeTimes) {
                         const millis = this.timeToMilliseconds(timeArr);
@@ -139,7 +139,7 @@ class Lyrica {
 
         this.times = entries.map(entry => entry.time);
         this.lyrics = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
-        this.lyricsCounter = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
+        this.lyricsCounts = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
 
 
         this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
@@ -269,8 +269,10 @@ class Lyrica {
                     karoakeTimes.push([min, sec, ms]);
                     texts.push(match[4]);
                 }
-                times.push(karoakeTimes);
-                counters = texts.length
+                if (this.actKaraoke) {
+                    times.push(karoakeTimes);
+                }
+                counters = texts.length + 1;
             }
         }else if (line !== '') {
             const meta = metaRegex.exec(line);
@@ -279,7 +281,7 @@ class Lyrica {
             }
         }
 
-        const text = this.karaoke ? texts.length > 0 ? texts : [textSingle] : textSingle, counter = this.karaoke ? counters : null ;
+        const text = this.karaoke ? this.actKaraoke ? texts.length > 0 ? texts : [textSingle] : String(texts.join('')) : textSingle, counter = this.karaoke && this.actKaraoke ? counters : null ;
         
 
         return [isValid, isValid ? { times, text, counter} : null];
@@ -314,7 +316,7 @@ class Lyrica {
                         p.appendChild(litt)
                     });
                 }else {
-                    p.textContent = String(lyrics[i].join(''));
+                    p.textContent = lyrics[i]
                 }
                 p.classList.add("lyric");
                 p.setAttribute("data-time", (times[i] - offset));
@@ -341,8 +343,9 @@ class Lyrica {
     }
 
     syncLyrics() {
-        const { times, lyrics, audio, offset} = this;
+        const { times, lyrics, audio, offset, karaoke, actKaraoke} = this;
         const animationType = this.options?.animations?.animation_type || "normal";
+        const karaokeStats = karaoke && actKaraoke;
         let lastIndex = [0, 0];
         let interval;
 
@@ -367,10 +370,7 @@ class Lyrica {
                 let currentTime = audio.currentTime * 1000;
                 if (Math.abs(currentTime-lastIndex[1])<70) {
                     if (times[lastIndex[0]] - offset  <=currentTime) {
-
-                        //console.log(Math.floor(Math.abs(currentTime-lastIndex[1])), `| ${currentTime} - ${lastIndex[1]}`);
-
-                        this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime);
+                        this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime, karaokeStats);
                         lastIndex=[lastIndex[0]+1, currentTime];
                     }else{
                         lastIndex=[lastIndex[0], currentTime];
@@ -389,7 +389,7 @@ class Lyrica {
 
     }
 
-    sendLyric(mode, lyric, currentTime) {
+    sendLyric(mode, lyric, currentTime, karaoke) {
         const defaultSendType = () => {
             const prevLyric = this.container.querySelector(`.lyric`);
             if (prevLyric) { prevLyric.remove(); }
@@ -430,6 +430,7 @@ class Lyrica {
 
         this.lastPlayedLyric = this.gCurrentLyric;
         this.gCurrentLyric = [this.lyrics[lyric[1]], this.times[lyric[1]], lyric[1]];
+        
         switch (mode) {
             case "normal":
                 defaultSendType();
@@ -438,6 +439,18 @@ class Lyrica {
                 slideSendType();
                 break;
         }
+    }
+
+    karaokeMatchIndex(index) {
+        const { times, lyricsCounts } = this;
+        let sumHldr=0, indexHldr=0;
+
+        while (sumHldr + lyricsCounts[indexHldr] <= index) {
+            sumHldr += lyricsCounts[indexHldr];
+            indexHldr += 1
+        }
+        
+        return [ indexHldr, (index - sumHldr - 2) ]
     }
 
     searchLyric(time, exact, index) {
@@ -583,6 +596,6 @@ class Lyrica {
     }
 
     getData() {
-        return {"lyrics": this.lyrics, "lyricsCounter": this.lyricsCounter, "times": this.times, "metadata": this.metadata}
+        return {"lyrics": this.lyrics, "lyricsCounter": this.lyricsCounts, "times": this.times, "metadata": this.metadata}
     }
 }
