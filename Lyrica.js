@@ -320,6 +320,7 @@ class Lyrica {
                 }
                 p.classList.add("lyric");
                 p.setAttribute("data-time", (times[i] - offset));
+                p.setAttribute("index", i);
                 fragment.appendChild(p);
             }
         }else {
@@ -390,13 +391,14 @@ class Lyrica {
     }
 
     sendLyric(mode, lyric, currentTime, karaoke) {
+        const {lyrics, container } = this
         const defaultSendType = () => {
-            const prevLyric = this.container.querySelector(`.lyric`);
+            const prevLyric = container.querySelector(`.lyric`);
             if (prevLyric) { prevLyric.remove(); }
             const el = document.createElement('p');
             el.classList.add("lyric");
             el.textContent = lyric[0];
-            this.container.appendChild(el);
+            container.appendChild(el);
             el.style.animation=`${this.options?.animations?.keyframe_id || 'LrcLyricIn'} ${this.options?.animations?.animation_parameters || 'ease-out 0.2s'}`;
 
             clearTimeout()
@@ -407,54 +409,66 @@ class Lyrica {
             }, wait)*/
         }
         const karaokeDefaultSendType = () => {
-            const matched = this.karaokeMatchIndex(lyric[1]);
-            const on = this.container.querySelector(`.lyric`);
+            const on = container.querySelector(`.lyric`);
             let over;
             over = on ? on.getAttribute("index") : null;
 
             if (matched[1] == -1 || Number(over) !== matched[0]) {
-                const prevLyric = this.container.querySelector(`.lyric`);
+                const prevLyric = container.querySelector(`.lyric`);
                 if (prevLyric) { prevLyric.remove(); }
                 const el = document.createElement('div');
                 el.classList.add("lyric");
                 el.setAttribute("index", matched[0])
-                this.lyrics[matched[0]].forEach(elc => {
+                lyrics[matched[0]].forEach(elc => {
                     const litt = document.createElement("p");
                     litt.textContent = elc;
                     el.appendChild(litt)
                 });
-                this.container.appendChild(el);
+                container.appendChild(el);
             }else {
-                console.log('shod')
                 for (let i=0; i<=matched[1]; i++) {
-                    this.container.querySelector(`.lyric p:nth-child(${(i+1)})`).classList.add("active")
+                    container.querySelector(`.lyric p:nth-child(${(i+1)})`).classList.add("active")
                 }
             }
         }
 
-        const slideSendType = () => {
-            const pervLyric = this.container.querySelectorAll(".active")
+        const slideSendType = (iskaraoke) => {
+            const pervLyric = container.querySelectorAll(".active")
             pervLyric.forEach(lyric => {
                 lyric.classList.remove("active")
             });
-            const index = this.options.animations?.auto_scroll? (lyric[1] + 2) : (lyric[1] + 1);
-            this.container.querySelector(`.lyric:nth-child(${index})`).classList.add("active")
+            const lyricI = iskaraoke ? matched[0] : lyric[1];
+            const index = this.options.animations?.auto_scroll? (lyricI + 2) : (lyricI + 1);
+            container.querySelector(`.lyric:nth-child(${index})`).classList.add("active")
 
             if (this.options.animations.auto_scroll && this.contaScroll) {
-                const contaHeight = this.container.offsetHeight;
-                const lyricHeight = this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 2)})`).offsetHeight;
-                const lyricTop = this.container.querySelector(`.lyric:nth-child(${(lyric[1] + 2)})`).offsetTop;
+                const contaHeight = container.offsetHeight;
+                const lyricHeight = container.querySelector(`.lyric:nth-child(${(lyricI + 2)})`).offsetHeight;
+                const lyricTop = container.querySelector(`.lyric:nth-child(${(lyricI + 2)})`).offsetTop;
                 const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)))
                 
-                this.container.scrollTo({
+                container.scrollTo({
                     top: calcTop,
                     behavior: 'smooth'
                 })
             }
         }
+        const karaokeSlideSendType = function() {
+            const on = container.querySelector(`div.active`);
+            let over;
+            over = on ? on.getAttribute("index") : null;
+            if (matched[1] == -1 || Number(over) !== matched[0]) {
+                slideSendType(true)
+            }else {
+                for (let i=0; i<=matched[1]; i++) {
+                    container.querySelector(`.active p:nth-child(${(i+1)})`).classList.add("active")
+                }
+            }
+        }
 
         this.lastPlayedLyric = this.gCurrentLyric;
         this.gCurrentLyric = [this.lyrics[lyric[1]], this.times[lyric[1]], lyric[1]];
+        const matched = this.karaokeMatchIndex(lyric[1]);
         
         switch (mode) {
             case "normal":
@@ -465,7 +479,11 @@ class Lyrica {
                 }
                 break;
             case "slide":
-                slideSendType();
+                if (karaoke) {
+                    karaokeSlideSendType();
+                }else {
+                    slideSendType(false);
+                }
                 break;
         }
     }
