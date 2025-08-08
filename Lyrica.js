@@ -357,7 +357,7 @@ class Lyrica {
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
                     if (times[(i+1)] - offset >= (currentTime) || i === (times.length - 1)) {
-                        this.sendLyric(animationType, [lyrics[i], i])
+                        this.sendLyric(animationType, [lyrics[i], i], '', karaokeStats)
                         lastIndex=[lastIndex[0], currentTime];
                         lastIndex[0] = i;
                         break;
@@ -406,6 +406,31 @@ class Lyrica {
                 el.style.animation="0.2s LrcLyricOut ease-in forwards"
             }, wait)*/
         }
+        const karaokeDefaultSendType = () => {
+            const matched = this.karaokeMatchIndex(lyric[1]);
+            const on = this.container.querySelector(`.lyric`);
+            let over;
+            over = on ? on.getAttribute("index") : null;
+
+            if (matched[1] == -1 || Number(over) !== matched[0]) {
+                const prevLyric = this.container.querySelector(`.lyric`);
+                if (prevLyric) { prevLyric.remove(); }
+                const el = document.createElement('div');
+                el.classList.add("lyric");
+                el.setAttribute("index", matched[0])
+                this.lyrics[matched[0]].forEach(elc => {
+                    const litt = document.createElement("p");
+                    litt.textContent = elc;
+                    el.appendChild(litt)
+                });
+                this.container.appendChild(el);
+            }else {
+                console.log('shod')
+                for (let i=0; i<=matched[1]; i++) {
+                    this.container.querySelector(`.lyric p:nth-child(${(i+1)})`).classList.add("active")
+                }
+            }
+        }
 
         const slideSendType = () => {
             const pervLyric = this.container.querySelectorAll(".active")
@@ -433,7 +458,11 @@ class Lyrica {
         
         switch (mode) {
             case "normal":
-                defaultSendType();
+                if (karaoke) {
+                    karaokeDefaultSendType();
+                }else {
+                    defaultSendType();
+                }
                 break;
             case "slide":
                 slideSendType();
@@ -450,7 +479,7 @@ class Lyrica {
             indexHldr += 1
         }
         
-        return [ indexHldr, (index - sumHldr - 2) ]
+        return [ indexHldr, (index - sumHldr - 1) ]
     }
 
     searchLyric(time, exact, index) {

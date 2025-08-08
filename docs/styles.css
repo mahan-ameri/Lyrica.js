@@ -240,9 +240,14 @@ section .static {
     margin-bottom: 6vh;
 }
 .top #lyrica-container2 .lyric p {
+    opacity: 0.5;
     white-space: pre;
     display: inline-flex;
     justify-content: center;
+    transition: 0.1s;
+}
+.top #lyrica-container2 .lyric p.active {
+    opacity: 1;
 }
 
 .top #lyrica-container2 #load {
