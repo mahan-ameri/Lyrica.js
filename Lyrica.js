@@ -515,12 +515,14 @@ class Lyrica {
     }
 
     searchLyric(time, exact, index) {
-        const { times, lyrics } = this;
+        const { times, lyrics, lyricsCounts, karaoke, actKaraoke } = this;
         
         function findLyric(time, index) {
-            for (let i = 0; i < times.length; i++) {
-                if (times[i] > (time)) {
-                    return index ? [lyrics[(i-1)], i-1] : [lyrics[(i-1)]]
+            for (let i = 0; i < lyrics.length; i++) {
+                const indx = karaoke && actKaraoke ? lyricsCounts[i][1] : i;
+                if (times[indx] > (time)) {
+                    const text = karaoke && actKaraoke ? String(lyrics[(i-1)].join('')) : lyrics[(i-1)]
+                    return index ? [text, i-1] : [text]
                 }
             }
         }
@@ -533,7 +535,7 @@ class Lyrica {
         const timeRegex = /(\d+):(\d{2})\.(\d{2})/ , match = timeRegex.exec(time);
         let askedTime;
         if (!(match)) {
-            askedTime = time
+            askedTime = time;
         }else {
             const [_, min, sec, ms] = match;
             askedTime = this.timeToMilliseconds([min, sec, ms])
@@ -546,13 +548,16 @@ class Lyrica {
     }
 
     searchTime(lyric, index) {
-        const { times, lyrics } = this;
+        const { times, lyrics, lyricsCounts, karaoke, actKaraoke } = this;
         let matchedTimes = [];
         let matchedTimesIndexes = [];
-        for (let i=0; i<=lyrics.length; i++) {
-            if (lyrics[i] === lyric) {
-                matchedTimes.push(times[i]);
-                matchedTimesIndexes.push(i);
+        for (let i=0; i<lyrics.length; i++) {
+            const index = karaoke && actKaraoke ? lyricsCounts[i][1] : i;
+            const wanted = karaoke && actKaraoke ? String(lyrics[i].join('')) : lyrics[i];
+
+            if (wanted === lyric) {
+                matchedTimes.push(times[index]);
+                matchedTimesIndexes.push(index);
             }
         }
 
@@ -569,12 +574,13 @@ class Lyrica {
 
     next(dis) {
         if (this.options.type === "sync") {
+            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke } = this
             const currentIndex = this.gCurrentLyric?.[2] || 0;
             const dist = dis || 1;
-            if (currentIndex < this.lyrics.length - dist) {
-                const i = this.karaoke && this.actKaraoke? this.lyricsCounts[currentIndex + dist][1] : currentIndex + dist;
-                this.audio.currentTime = (this.times[i] / 1000) + 0.2;
-                return [this.lyrics[i], this.times[i], i];
+            if (currentIndex < lyrics.length - dist) {
+                const i = karaoke && actKaraoke? lyricsCounts[currentIndex + dist][1] : currentIndex + dist;
+                audio.currentTime = (times[i] / 1000) + 0.2;
+                return [lyrics[i], times[i], i];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
                 // this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
             }else {
@@ -587,12 +593,13 @@ class Lyrica {
 
     previous(dis) {
         if (this.options.type === "sync") {
+            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke } = this
             const currentIndex = this.gCurrentLyric?.[2] || 0;
             const dist = dis || 1;
             if (currentIndex >= dist) {
-                const i = this.karaoke && this.actKaraoke? this.lyricsCounts[currentIndex - dist][1] : currentIndex - dist;
-                this.audio.currentTime = (this.times[i] / 1000) + 0.2;
-                return [this.lyrics[i], this.times[i], i];
+                const i = karaoke && actKaraoke? lyricsCounts[currentIndex - dist][1] : currentIndex - dist;
+                audio.currentTime = (times[i] / 1000) + 0.2;
+                return [lyrics[i], times[i], i];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
                 // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
             }else {
@@ -618,11 +625,12 @@ class Lyrica {
 
     goTo(place) {
         if (this.options.type === "sync") {
+            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke} = this
             if (place.time) {
                 if (place.time !== '') {
                    const lyric = this.searchLyric(place.time, false, true);
-                    this.audio.currentTime = (this.times[lyric[1]] / 1000) + 0.2;
-                    return [lyric[0], this.times[lyric[1]], lyric[1]]
+                    audio.currentTime = (times[lyric[1]] / 1000) + 0.2;
+                    return [lyric[0], times[lyric[1]], lyric[1]]
                 }else {
                     return undefined
                 }
@@ -637,16 +645,17 @@ class Lyrica {
                 }
                 const lyricsIndexes = this.searchTime(lyricText, true);
                 if (lyricsIndexes[1].length >= 0 && lyricsIndexes[1][lyricIndex] !== undefined) {
-                    this.audio.currentTime = (this.times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
-                    return [lyricText, this.times[lyricsIndexes[1][lyricIndex]], lyricsIndexes[1][lyricIndex]];
+                    audio.currentTime = (times[lyricsIndexes[1][lyricIndex]] / 1000) + 0.2;
+                    return [lyricText, times[lyricsIndexes[1][lyricIndex]], lyricsIndexes[1][lyricIndex]];
                 }else {
                     return undefined;
                 }
                 
             }else if (place.index) {
                 if (place.index !== '' && !isNaN(place.index)) {
-                    this.audio.currentTime = (this.times[Number(place.index)] / 1000) + 0.2;
-                    return [this.lyrics[place.index], this.times[place.index], place.index]
+                    const index = karaoke && actKaraoke ? lyricsCounts[Number(place.index)][1] : Number(place.index)
+                    audio.currentTime = (times[index] / 1000) + 0.2;
+                    return [lyrics[place.index], times[place.index], place.index]
                 }else {
                     return undefined
                 }
