@@ -141,8 +141,14 @@ class Lyrica {
         this.lyrics = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
         this.lyricsCounts = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
 
-
         this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
+
+        let hldr = 0;
+        const lt = this.lyricsCounts.length;
+        for (let i=0; i < lt; i++) {
+            this.lyricsCounts[i] = [this.lyricsCounts[i], hldr];
+            hldr+=this.lyricsCounts[i][0]
+        }
         
         this.typesHandler()
     }
@@ -218,7 +224,7 @@ class Lyrica {
                             const lyric = e.target.closest(".lyric");
                             if (lyric !== null) {
                                 let time = lyric.getAttribute("data-time");
-                                this.audio.currentTime = (time / 1000) + 0.2;
+                                this.audio.currentTime = (Number(time) / 1000) + 0.2;
                             }
                         })
                     }
@@ -294,7 +300,7 @@ class Lyrica {
     }
 
     renderLyrics() {
-        const { times, lyrics, offset} = this;
+        const { times, lyrics, lyricsCounts, offset} = this;
         const container = document.querySelector(this.options.container_selector);
         const isAutoScroll = this.options.animations && this.options.animations.auto_scroll;
         const fragment = document.createDocumentFragment();
@@ -315,11 +321,12 @@ class Lyrica {
                         litt.textContent = el;
                         p.appendChild(litt)
                     });
+                    p.setAttribute("data-time", (times[lyricsCounts[i][1]] - offset));
                 }else {
                     p.textContent = lyrics[i]
+                    p.setAttribute("data-time", (times[i] - offset));
                 }
                 p.classList.add("lyric");
-                p.setAttribute("data-time", (times[i] - offset));
                 p.setAttribute("index", i);
                 fragment.appendChild(p);
             }
@@ -391,7 +398,7 @@ class Lyrica {
     }
 
     sendLyric(mode, lyric, currentTime, karaoke) {
-        const {lyrics, container } = this
+        const {lyrics, times, container } = this
         const defaultSendType = () => {
             const prevLyric = container.querySelector(`.lyric`);
             if (prevLyric) { prevLyric.remove(); }
@@ -466,10 +473,17 @@ class Lyrica {
             }
         }
 
-        this.lastPlayedLyric = this.gCurrentLyric;
-        this.gCurrentLyric = [this.lyrics[lyric[1]], this.times[lyric[1]], lyric[1]];
-        const matched = this.karaokeMatchIndex(lyric[1]);
-        
+        const matched = karaoke? this.karaokeMatchIndex(lyric[1]) : false;
+        if (karaoke) {
+            if (matched[1] == -1) {
+                this.lastPlayedLyric = this.gCurrentLyric;
+            }
+            this.gCurrentLyric = [lyrics[matched[0]], times[lyric[1]], matched[0]];
+        }else {
+            this.lastPlayedLyric = this.gCurrentLyric;
+            this.gCurrentLyric = [lyrics[lyric[1]], times[lyric[1]], lyric[1]];
+        }
+
         switch (mode) {
             case "normal":
                 if (karaoke) {
@@ -492,8 +506,8 @@ class Lyrica {
         const { times, lyricsCounts } = this;
         let sumHldr=0, indexHldr=0;
 
-        while (sumHldr + lyricsCounts[indexHldr] <= index) {
-            sumHldr += lyricsCounts[indexHldr];
+        while (sumHldr + lyricsCounts[indexHldr][0] <= index) {
+            sumHldr += lyricsCounts[indexHldr][0];
             indexHldr += 1
         }
         
@@ -558,7 +572,7 @@ class Lyrica {
             const currentIndex = this.gCurrentLyric?.[2] || 0;
             const dist = dis || 1;
             if (currentIndex < this.lyrics.length - dist) {
-                const i =currentIndex + dist
+                const i = this.karaoke && this.actKaraoke? this.lyricsCounts[currentIndex + dist][1] : currentIndex + dist;
                 this.audio.currentTime = (this.times[i] / 1000) + 0.2;
                 return [this.lyrics[i], this.times[i], i];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
@@ -576,7 +590,7 @@ class Lyrica {
             const currentIndex = this.gCurrentLyric?.[2] || 0;
             const dist = dis || 1;
             if (currentIndex >= dist) {
-                const i = currentIndex - dist;
+                const i = this.karaoke && this.actKaraoke? this.lyricsCounts[currentIndex - dist][1] : currentIndex - dist;
                 this.audio.currentTime = (this.times[i] / 1000) + 0.2;
                 return [this.lyrics[i], this.times[i], i];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
