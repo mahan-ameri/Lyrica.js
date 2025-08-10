@@ -47,9 +47,9 @@ class Lyrica {
         }
 
         this.karaoke = this.options.isKaraoke ?? false;
-        this.actKaraoke = this.options.actKaraoke ?? false;
+        this.actKaraoke = this.options.actKaraoke ?? this.karaoke;
         this.audio = document.querySelector(this.options.audio_selector);
-        this.isRaw = this.options.isRaw || false;
+        this.isRaw = this.options.isRaw ?? false;
     }
 
     getRequiredOptionsByType() {
@@ -365,7 +365,7 @@ class Lyrica {
             let currentTime = audio.currentTime * 1000;
                 for (let i = 0; i < times.length; i++) {
                     if (times[(i+1)] - offset >= (currentTime) || i === (times.length - 1)) {
-                        this.sendLyric(animationType, [lyrics[i], i], '', karaokeStats)
+                        this.sendLyric(animationType, [lyrics[i], i], '', karaokeStats, true)
                         lastIndex=[lastIndex[0], currentTime];
                         lastIndex[0] = i;
                         break;
@@ -378,7 +378,7 @@ class Lyrica {
                 let currentTime = audio.currentTime * 1000;
                 if (Math.abs(currentTime-lastIndex[1])<70) {
                     if (times[lastIndex[0]] - offset  <=currentTime) {
-                        this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime, karaokeStats);
+                        this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime, karaokeStats, false);
                         lastIndex=[lastIndex[0]+1, currentTime];
                     }else{
                         lastIndex=[lastIndex[0], currentTime];
@@ -397,7 +397,7 @@ class Lyrica {
 
     }
 
-    sendLyric(mode, lyric, currentTime, karaoke) {
+    sendLyric(mode, lyric, currentTime, karaoke, checkAll) {
         const {lyrics, times, container } = this
         const defaultSendType = () => {
             const prevLyric = container.querySelector(`.lyric`);
@@ -442,9 +442,21 @@ class Lyrica {
         const slideSendType = (iskaraoke) => {
             const pervLyric = container.querySelectorAll(".active")
             pervLyric.forEach(lyric => {
-                lyric.classList.remove("active")
+                lyric.classList.add("passed");
+                lyric.classList.remove("active");
             });
             const lyricI = iskaraoke ? matched[0] : lyric[1];
+            if (checkAll) {
+                const children = container.children;
+                const passed = container.querySelectorAll('.passed');
+                passed.forEach(psd => {
+                    psd.classList.remove("passed");
+                })
+                const forgt = this.options.animations?.auto_scroll? 1 : 0;
+                for (let i=forgt; i <= lyricI; i++) {
+                    children[i].classList.add("passed")
+                }
+            }
             const index = this.options.animations?.auto_scroll? (lyricI + 2) : (lyricI + 1);
             container.querySelector(`.lyric:nth-child(${index})`).classList.add("active")
 
@@ -631,8 +643,9 @@ class Lyrica {
             if (place.time) {
                 if (place.time !== '') {
                     const lyric = this.searchLyric(place.time, false, true);
-                    audio.currentTime = ((times[lyricsCounts[lyric[1]][1]] - offset) / 1000) + 0.2;
-                    return [lyric[0], (times[lyricsCounts[lyric[1]][1]] - offset), lyric[1]]
+                    const index = karaoke && actKaraoke ? lyricsCounts[lyric[1]][1] : lyric[1]
+                    audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
+                    return [lyric[0], (times[index] - offset), lyric[1]]
                 }else {
                     return undefined
                 }
@@ -640,7 +653,7 @@ class Lyrica {
                 let lyricText, lyricIndex;
                 if (Array.isArray(place.lyric)) {
                     lyricText = String(place.lyric[0]);
-                    lyricIndex = place.lyric[1] || 0;
+                    lyricIndex = place.lyric[1] ?? 0;
                 } else {
                     lyricText = String(place.lyric);
                     lyricIndex = 0;
@@ -648,7 +661,7 @@ class Lyrica {
                 const lyricsIndexes = this.searchTime(lyricText, true);
                 if (lyricsIndexes[1].length >= 0 && lyricsIndexes[1][lyricIndex] !== undefined) {
                     audio.currentTime = ((times[lyricsIndexes[1][lyricIndex]] - offset) / 1000) + 0.2;
-                    return [lyricText, (times[lyricsIndexes[1][lyricIndex]] - offset), lyricsIndexes[1][lyricIndex]];
+                    return [lyricText, (times[lyricsIndexes[1][lyricIndex]] - offset), this.karaokeMatchIndex(lyricsIndexes[1][lyricIndex])[0]];
                 }else {
                     return undefined;
                 }
