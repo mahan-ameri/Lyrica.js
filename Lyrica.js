@@ -540,8 +540,9 @@ class Lyrica {
         }
         function findExactLyric(time, index) {
             const i = times.indexOf(time);
-            const text = (i>0 ? lyrics[i] : false)
-            return index ? [text, i] : [text]
+            const indx = karaoke && actKaraoke ? lyricsCounts[i][1] : i
+            const text = (i>0 ? lyrics[indx] : false)
+            return index ? [text, indx] : [text]
         }
 
         const timeRegex = /(\d+):(\d{2})\.(\d{2})/ , match = timeRegex.exec(time);
@@ -586,14 +587,14 @@ class Lyrica {
 
     next(dis) {
         if (this.options.type === "sync") {
-            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke, offset } = this
+            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke, offset } = this;
             const currentIndex = this.gCurrentLyric?.[2] || 0;
             const dist = dis || 1;
             if (currentIndex < lyrics.length - dist) {
-                const i = karaoke && actKaraoke? lyricsCounts[currentIndex + dist][1] : currentIndex + dist;
-                audio.currentTime = ((times[i] - offset) / 1000) + 0.2;
-                const text = karaoke && actKaraoke ? String(lyrics[currentIndex + dist].join('')) : lyrics[currentIndex + dist]
-                return [text, (times[i] - offset), (currentIndex + dist)];
+                const index = karaoke && actKaraoke? lyricsCounts[currentIndex + dist][1] : currentIndex + dist;
+                audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
+                const wanted = karaoke && actKaraoke ? String(lyrics[currentIndex + dist].join('')) : lyrics[currentIndex + dist]
+                return [wanted, (times[index] - offset), (currentIndex + dist)];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
                 // this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
             }else {
@@ -610,10 +611,10 @@ class Lyrica {
             const currentIndex = this.gCurrentLyric?.[2] || 0;
             const dist = dis || 1;
             if (currentIndex >= dist) {
-                const i = karaoke && actKaraoke? lyricsCounts[currentIndex - dist][1] : currentIndex - dist;
-                audio.currentTime = ((times[i] - offset) / 1000) + 0.2;
-                const text = karaoke && actKaraoke ? String(lyrics[currentIndex + dist].join('')) : lyrics[currentIndex + dist]
-                return [text, (times[i] - offset), (currentIndex + dist)];
+                const index = karaoke && actKaraoke? lyricsCounts[currentIndex - dist][1] : currentIndex - dist;
+                audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
+                const wanted = karaoke && actKaraoke ? String(lyrics[currentIndex + dist].join('')) : lyrics[currentIndex + dist]
+                return [wanted, (times[index] - offset), (currentIndex + dist)];
                 // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
                 // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
             }else {
@@ -643,7 +644,7 @@ class Lyrica {
             if (place.time) {
                 if (place.time !== '') {
                     const lyric = this.searchLyric(place.time, false, true);
-                    const index = karaoke && actKaraoke ? lyricsCounts[lyric[1]][1] : lyric[1]
+                    const index = karaoke && actKaraoke ? lyricsCounts[lyric[1]][1] : lyric[1];
                     audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
                     return [lyric[0], (times[index] - offset), lyric[1]]
                 }else {
@@ -670,8 +671,8 @@ class Lyrica {
                 if (place.index !== '' && !isNaN(place.index)) {
                     const index = karaoke && actKaraoke ? lyricsCounts[Number(place.index)][1] : Number(place.index)
                     audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
-                    const text = karaoke && actKaraoke ? String(lyrics[place.index].join('')) : lyrics[place.index]
-                    return [text, (times[index] - offset), place.index]
+                    const wanted = karaoke && actKaraoke ? String(lyrics[place.index].join('')) : lyrics[place.index]
+                    return [wanted, (times[index] - offset), place.index]
                 }else {
                     return undefined
                 }

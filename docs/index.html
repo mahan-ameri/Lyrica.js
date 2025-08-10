@@ -87,8 +87,11 @@
         });
 
         document.getElementById("load").addEventListener("click" ,()=>{
+            document.getElementById("load").remove();
             const print = new Lyrica("./res/From_Aemia.lrc", {
                 type: "print",
+                isKaraoke: true,
+                actKaraoke: false,
                 container_selector: "#lyrica-container2"
             })
         })
@@ -116,7 +119,6 @@
         window.fgd = function() {
             let text = example.getData()
             console.log(text)
-            example.offset = 1000
             addToConsole(`{lyric: (${text.lyrics.length})[...], metadata: {...}, times: (${text.times.length})[...]}`)
         }
         window.fgc = function() {
