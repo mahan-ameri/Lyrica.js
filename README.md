@@ -1,5 +1,7 @@
 # 🎵 Lyrica.js
 Lyrica is a lightweight and optimized JavaScript library for working with both standard and advanced `.lrc` lyric files — perfect for music players, karaoke apps, or any project that needs lyric synchronization and `.lrc` data extraction.
+
+![preview](https://github.com/user-attachments/assets/3f9ba634-4e7e-432e-9863-c7f9bd199531)
 ## ✨ Features
 * Modes:
     * Sync - Render lyrics and synchronize them in real time with an HTML `<audio>` element.
