@@ -50,6 +50,7 @@ class Lyrica {
         this.actKaraoke = this.options.actKaraoke ?? this.karaoke;
         this.audio = document.querySelector(this.options.audio_selector);
         this.isRaw = this.options.isRaw ?? false;
+        this.auto_start = this.options.autoStart ?? true;
     }
 
     getRequiredOptionsByType() {
@@ -70,6 +71,11 @@ class Lyrica {
             if (value && !["#", "."].includes(value.charAt(0))) {
                 throw new Error(`Element selector for "${selector}" must start with "#" or ".".`);
             }
+            const test = document.querySelector(value);
+            if (test === null) {
+                throw new Error(`${value} is not a valid selector.`)
+            }
+            
         });
     }
 
@@ -351,14 +357,14 @@ class Lyrica {
     }
 
     syncLyrics() {
-        const { times, lyrics, audio, offset, karaoke, actKaraoke} = this;
+        const { times, lyrics, audio, offset, karaoke, actKaraoke, auto_start } = this;
         const animationType = this.options?.animations?.animation_type || "normal";
         const karaokeStats = karaoke && actKaraoke;
         let lastIndex = [0, 0];
         let interval;
 
-        if (times[0]==0) {
-            this.gCurrentLyric=[lyrics[0], times[0], 0]
+        if (times[0] == 0) {
+            this.gCurrentLyric = [lyrics[0], times[0], 0];
         }
 
         const CheckAll = () => {
@@ -373,28 +379,38 @@ class Lyrica {
                 }
         }
 
-        audio.addEventListener("play", () => {
+        const sync = () => {
+            clearInterval(interval);
+            CheckAll();
             interval = setInterval(() => {
                 let currentTime = audio.currentTime * 1000;
-                if (Math.abs(currentTime-lastIndex[1])<70) {
-                    if (times[lastIndex[0]] - offset  <=currentTime) {
+                if (Math.abs(currentTime - lastIndex[1]) < 70) {
+                    if (times[lastIndex[0]] - offset <= currentTime) {
                         this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime, karaokeStats, false);
-                        lastIndex=[lastIndex[0]+1, currentTime];
-                    }else{
-                        lastIndex=[lastIndex[0], currentTime];
+                        lastIndex = [lastIndex[0] + 1, currentTime];
+                    } else {
+                        lastIndex = [lastIndex[0], currentTime];
                     }
-                }else {
-                    CheckAll(currentTime);
+                } else {
+                    CheckAll();
                 }
             }, 10);
-        });
-        audio.addEventListener("pause", () => {
-            clearInterval(interval);
-        });
-        audio.addEventListener("seeked", () => {
-            CheckAll()
-        })
+        };
 
+        const stopSync = () => {
+            clearInterval(interval);
+            interval = null;
+        };
+
+        this.start = () => sync();
+        this.pause = () => stopSync();
+
+        if (auto_start) {
+            audio.addEventListener("play", sync);
+            audio.addEventListener("pause", stopSync);
+        }
+
+        audio.addEventListener("seeked", CheckAll);
     }
 
     sendLyric(mode, lyric, currentTime, karaoke, checkAll) {
