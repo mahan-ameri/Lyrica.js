@@ -1,3 +1,5 @@
 /backups
 _notes.txt
-/res
+/node_modules
+/package-lock.json
+/rollup.config.mjs
