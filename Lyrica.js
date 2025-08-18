@@ -422,7 +422,7 @@ class Lyrica {
             el.classList.add("lyric");
             el.textContent = lyric[0];
             container.appendChild(el);
-            el.style.animation=`${this.options?.animations?.keyframe_id || 'LrcLyricIn'} ${this.options?.animations?.animation_parameters || 'ease-out 0.2s'}`;
+            el.style.animation=`${this.options?.animations?.keyframe_id || 'LyricaLyricIn'} ${this.options?.animations?.animation_parameters || 'ease-out 0.2s'}`;
 
             clearTimeout()
             /*

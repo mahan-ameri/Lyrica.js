@@ -17,19 +17,15 @@ Lyrica is a lightweight and optimized JavaScript library for working with both s
 * Search - Find a lyric by time or find the timestamp(s) for a given lyric.
 
 ## 📦 Installation
-via npm
+#### via npm
 ```
-npm install lyrica.js
+npm i lyrica
 ```
-via CDN
-```
-<script src=""></script>
-```
-Manual
+#### Manual
 
-Download 'Lyrica.js' and include it in your project:
+ Download `Lyrica.umd.js` from `dist` folder and include it in your project:
 ```
-<script src="./Lyrica.js"></script>
+<script src="./Lyrica.umd.js"></script>
 ```
 
 # ☄️ Quick Start
@@ -50,3 +46,48 @@ const example = new Lyrica("./example.lrc", {
     }
 });
 ```
+
+# 🏫 Basic Usage
+## Path
+The first parameter is a string that can be either a `.lrc` file path or raw `.lrc` text. (required)
+
+## Options
+The second parameter is an options object that configures the class.(required)
+
+| Option | Type | Default | Description |
+|--------|------|---------|-------------|
+| type | string | - | "sync", "print, "extract" (required) |
+| isRaw | boolean | false | Pass raw `.lrc` text instead of file path |
+| offset | number | inset `.lrc` offset / 0 | Adjust lyric timing in millisecond |
+| audio_selector | string | - | CSS selector for `<audio>` element (required for "sync") |
+| container_selector | string | - | CSS selector for lyrics container (required for "sync")|
+| animations | object | - | Animation settings (see below) |
+| isKaraoke | boolean | false | Enable advanced timing parse |
+| actKaraoke | boolean | isKaraoke's value | Whether to actively display karaoke segment |
+
+## Animations
+
+| Key | Type | Default | Description |
+|-----|------|---------|-------------|
+| animation_type | string | "normal" | "normal" or "slide" |  
+| auto_scroll | boolean | false | Automatically scroll to the active lyric (only in "slide") |
+| wheel_scroll | boolean | true | Enable mouse-wheel scrolling within sync scroll constraints (only in "slide") |
+| touch_scroll | boolean | true | Enable touch scrolling within sync scroll constraints (only in "slide") |
+| change_onclick | boolean | true | Clicking a lyric seeks audio (only in "slide") |
+| keyframe_id | string | "LyricaLyricIn" | The name of a CSS keyframe animation that will be applied only when a lyric becomes active in "normal" mode. |
+| animation_parameters | string | 'ease-out 0.2s' | Additional parameters passed to the animation call |
+
+## CSS Classes
+* Each lyric line is rendered inside an element with the class `.lyric` (applies to both normal and slide modes).
+* Active state:
+    * In slide mode: the current line or current word (in karaoke) receives the `.active` class.
+    * In normal mode: only the current word receives the `.active` class.
+* Passed lines: any line that has already been played is marked with the `.passed` class. (only in "slide")
+* Tag types:
+    * By default (no karaoke), each line is a `<p>` element in both normal and slide modes.
+    * When `isKaraoke: true` and `actKaraoke: true`, each word inside the line is wrapped in a `<span>` for fine-grained karaoke highlighting.
+* In `karaoke + actKaraoke`, the line itself still has the `.lyric` class, but instead of plain text, its words are split into `<span>`s so timing can highlight each word individually.
+# 📝 License
+MIT License © mahan-ameri
+
+---
