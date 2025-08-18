@@ -86,7 +86,7 @@ section .console {
     gap: 0vh;
     border-radius: 0.6vh;
     left: 50%;
-    top: 5%;
+    margin-top: 7%;
     padding-bottom: 1.3vh;
     border: 1px solid #33333395;
     transform: translateX(-50%);
@@ -120,6 +120,18 @@ section .console {
 .console .function-board span:active {
     box-shadow: 0 1px 0 0 #f3f3f3;
     transform: translateY(0.4vh);
+}
+
+.console #tip {
+    width: 90%;
+    height: 3%;
+    margin-top: 3%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255, 255, 255, 0.05);
+}
+.console #tip #text {
+    color: #f3f3f3;
 }
 
 .console .function-board span p {
@@ -165,6 +177,7 @@ section .static {
     align-content: space-between;
 }
 .static .top, .static .bottom {
+    position: relative;
     width: 100%;
     height: 49%;
     overflow: hidden;
@@ -179,14 +192,93 @@ section .static {
     position: relative;
     width: 100%;
     height: 26%;
-    display: flex;
-    justify-content: center;
-    align-content: space-around;
+    display: block;
     background: #add838;
 }
 .intro .song-info {
     height: 59%;
 }
+
+#tip {
+    position: relative;
+    height: 25%;
+    width: 100%;
+    display: flex;
+    justify-content: start;
+    align-items: center;
+    margin-top: 1.11vh;
+    padding-left: 1%;
+    border-radius: 7px;
+    overflow-x: scroll;
+    background: rgba(0, 0, 0, 0.05);
+}
+#tip::-webkit-scrollbar {
+    display: none;
+}
+#tip #icon {
+    height: 75%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: sans-serif;
+    border-radius: 7px;
+    font-size: 130%;
+    background: #edb125;
+}
+#tip #text {
+    margin-left: 3%;
+    font-family: monospace;
+    font-size: 1.6vh;
+    white-space: nowrap;
+}
+
+.static .overlay {
+    position: absolute;
+    width: 90%;
+    height: 7.5%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: end;
+    transform: translateX(-50%);
+    margin-top: 1.1vh;
+    background: transparent;
+    z-index: 10;
+}
+
+.raw-text-conta {
+    position: absolute;
+    width: 100%;
+    height: 74%;
+    bottom: 0;
+    display: none;
+    color: #fff;
+    font-family: monospace;
+    font-size: 1.6vh;
+    overflow-y: scroll;
+    padding: 0.3vh 1vh;
+    border-radius: 0.5vh 0.5vh 1vh 1vh;
+    background: #212220;
+    z-index: 9;
+}
+.audio .raw-text-conta {
+    height: 77%;
+}
+.raw-text-conta.active {
+    display: block;
+}
+.raw-text-conta.karaoke pre#one {
+    display: none;
+}
+.raw-text-conta pre#two {
+    display: none;
+}
+.raw-text-conta.karaoke pre#two {
+    display: block;
+}
+
+
 .top #lyrica-container2 {
     position: relative;
     width: 100%;
@@ -200,23 +292,23 @@ section .static {
     box-shadow: 0 0 0.9vh -0.4vh #333 inset;
     border-radius: 0.5vh 0.5vh 1vh 1vh;
 }
-.top #lyrica-container2::-webkit-scrollbar {
+div::-webkit-scrollbar {
     width: 0.9vh;
 }  
-.top #lyrica-container2::-webkit-scrollbar-track {
+.div::-webkit-scrollbar-track {
     background-color: transparent;
     border: 0.3vh solid rgba(126, 126, 126, 0.3);
     border-radius: 0.5vh;
 }
-.top #lyrica-container2:hover::-webkit-scrollbar-track {
+div:hover::-webkit-scrollbar-track {
     border: 0.3vh solid rgba(126, 126, 126, 0.8);
 }
-.top #lyrica-container2::-webkit-scrollbar-thumb {
+div::-webkit-scrollbar-thumb {
     background-color: transparent;
     border: 2px solid rgba(97, 97, 97, 0.3);
     border-radius: 0.5vh;
 }
-.top #lyrica-container2:hover::-webkit-scrollbar-thumb {
+div:hover::-webkit-scrollbar-thumb {
     border: 2px solid rgba(97, 97, 97, 0.8);
 }
 
@@ -256,6 +348,60 @@ section .static {
 
 .static .bottom {
     height: 39%;
+    display: flex;
+    flex-wrap: wrap;
+    align-content: space-around;
+    padding: 2% 1.5%;
+    justify-content: space-around;
+    background: transparent;
+}
+.bottom .cards {
+    position: relative;
+    height: 40%;
+    width: 45%;
+    overflow: hidden;
+    border-radius: 1.2vh;
+    box-shadow: 0 0 1vh -0.5vh #333;
+    background: rgba(0, 0, 0, 0.7);
+}
+.bottom .cards img {
+    position: absolute;
+    height: 100%;
+    opacity: 0.6;
+    transform: translateX(-40%);
+}
+.bottom .cards.npm {
+    background: rgba(187, 187, 187, 0.7);
+}
+.bottom .cards.npm img {
+    opacity: 0.2;
+}
+.bottom .cards p {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: monospace;
+    color: #f3f3f3;
+    font-size: 1.6vh;
+    text-align: center;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+.bottom .cards.npm p {
+    color: #000;
+    font-size: 1.8vh;
+    font-weight: bold;
+    backdrop-filter: blur(0.5vh);
+}
+.bottom .icons {
+    position: relative;
+    width: 95%;
+    height: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
     background: transparent;
 }
 
@@ -393,10 +539,133 @@ section .audio {
     text-shadow: 1px 2px 0px #333;
 }
 
+.audio .overlay {
+    position: absolute;
+    width: 95%;
+    height: 5.5%;
+    left: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transform: translateX(-50%);
+    margin-top: 1.1vh;
+    background: transparent;
+    z-index: 10;
+}
+.overlay .raw-text {
+    height: 100%;
+    aspect-ratio: 1 / 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.9vh;
+    font-family: monospace;
+    border-radius: 0.5ch;
+    user-select: none;
+    box-shadow: 0 0.2vh 0 #3c491b;
+    transition: 0.1s;
+    background: #add838;
+}
+.overlay .raw-text:active {
+    box-shadow: 0 0 0 #000;
+    transform: translateY(0.2vh);
+}
+.overlay .raw-text.active {
+    color: #add838;
+    background: #3c491b;
+}
+.overlay .toggle-karaoke {
+    height: 100%;
+    width: auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 1.9vh;
+    font-family: monospace;
+    color: #333;
+    border-radius: 0.5ch;
+    user-select: none;
+    padding: 0 0.9vh;
+    box-shadow: 0 0.2vh 0 #3c491b;
+    transition: box-shadow 0.1s, transform 0.1s;
+    background: #add838;
+}
+.overlay .toggle-karaoke:active {
+    box-shadow: 0 0 0 #000;
+    transform: translateY(0.2vh);
+}
+.overlay .toggle-karaoke.activ {
+    color: #add838;
+    background: #3c491b;
+}
+.overlay .toggle-karaoke.hidden {
+    width: 0;
+    padding: 0;
+    overflow: hidden;
+}
+
+.toggle-karaoke-conta {
+    position: absolute;
+    width: 100%;
+    height: 77%;
+    bottom: 0;
+    display: none;
+    left: 0;
+    bottom: 0;
+    background: rgb(186, 219, 227);
+    z-index: 7;
+}
+.toggle-karaoke-conta.active {
+    display: block;
+}
+.lyrica-karaoke-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    overflow-y: scroll;
+    box-shadow: 0 0 0.9vh -0.4vh #333 inset;
+    border-radius: 0.5vh 0.5vh 1vh 1vh;
+    background: transparent;
+}
+.lyrica-karaoke-container::-webkit-scrollbar {
+    display: none;
+}
+.lyrica-karaoke-container .lyric {
+    min-width: 80%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    white-space: pre;
+    font-size: 1.7vh;
+    cursor: pointer;
+    margin-top: 3vh;
+    font-family: monospace;
+}
+.lyrica-karaoke-container .lyric p {
+    opacity: 0.5;
+    transition: 0.4s;
+}
+.lyrica-karaoke-container .lyric.active p {
+    font-size: 2.3vh;
+}
+.lyrica-karaoke-container .lyric p.active {
+    font-weight: bold;
+    opacity: 1;
+}
+.lyrica-karaoke-container .lyric.passed p {
+    opacity: 1;
+    font-weight: bold;
+}
+
 .audio .lyrica-container {
     position: relative;
     width: 100%;
-    height: 88%;
+    height: 77%;
     overflow-y: scroll;
     display: flex;
     flex-wrap: wrap;
