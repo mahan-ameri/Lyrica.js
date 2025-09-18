@@ -145,6 +145,25 @@ The second parameter is an options object that configures the class.(required)
     * By default (no karaoke), each line is a `<p>` element in both normal and slide modes.
     * When `isKaraoke: true` and `actKaraoke: true`, each word inside the line is wrapped in a `<span>` for fine-grained karaoke highlighting.
 * In `karaoke + actKaraoke`, the line itself still has the `.lyric` class, but instead of plain text, its words are split into `<span>`s so timing can highlight each word individually.
+
+---------
+# 🎁 Support This Project
+
+If you find this project useful and would like to support its journey, consider sending a small donation— I’d be truly grateful. ✨
+
+### EVM Wallet (MetaMask):
+
+```
+0x22aDc02620D92973705F0274F6b0A5D8718b54B7
+```
+\- ✅ Supports Ethereum, Polygon, BNB Chain, and other EVM networks
+
+### Bitcoin:
+```
+bc1ql3p5a9fgssrqqsu4mf6ckqk4xxkn74p6gqpqj9
+```
+
+
 # 📝 License
 MIT License © mahan-ameri
 
