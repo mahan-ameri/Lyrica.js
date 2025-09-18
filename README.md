@@ -18,24 +18,24 @@ Lyrica is a lightweight and optimized JavaScript library for working with both s
 
 ## 📦 Installation
 #### via npm
-```
+```console
 npm i lyrica
 ```
 #### Manual
 
  Download `Lyrica.umd.js` from `dist` folder and include it in your project:
-```
+```html
 <script src="./Lyrica.umd.js"></script>
 ```
 
 # ☄️ Quick Start
 HTML:
-```
+```html
 <audio id="my-audio" src="song.mp3" controls></audio>
 <div class="lyrica-container"></div>
 ```
 JavaScript
-```
+```javascript
 const example = new Lyrica("./example.lrc", {
     type: "sync",
     audio_selector: "#my-audio",
@@ -65,7 +65,7 @@ The second parameter is an options object that configures the class.(required)
 | isKaraoke | boolean | false | Enable advanced timing parse |
 | actKaraoke | boolean | isKaraoke's value | Whether to actively display karaoke segment |
 
-## Animations
+### Animations
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
@@ -77,6 +77,64 @@ The second parameter is an options object that configures the class.(required)
 | keyframe_id | string | "LyricaLyricIn" | The name of a CSS keyframe animation that will be applied only when a lyric becomes active in "normal" mode. |
 | animation_parameters | string | 'ease-out 0.2s' | Additional parameters passed to the animation call |
 
+### Options Object Structure
+
+```javascript
+{
+  type: "sync" | "print" | "extract", // Required
+  audio_selector: "#audio", // Required for "sync" type
+  container_selector: "#lyrics", // Required for "sync" and "print" types
+  isKaraoke: false, // Optional
+  actKaraoke: false, // Optional
+  isRaw: false, // Optional
+  autoStart: true, // Optional
+  offset: 0, // Optional
+  animations: { // Optional
+    animation_type: "normal" | "slide",
+    animation_parameters: "ease-out 0.2s",
+    keyframe_id: "LyricaLyricIn",
+    auto_scroll: true,
+    wheel_scroll: true,
+    touch_scroll: true
+  }
+}
+``` 
+---------
+## Methods
+
+### Constructor and Static Methods
+
+| Method | Parameters | Description | Example |
+|--------|------------|-------------|----------|
+| `constructor(path, options)` | `path`: String<br>`options`: Object | Initializes a new Lyrica instance with the given LRC file path and options | `new Lyrica("lyrics.lrc", {type: "sync"})` |
+| `static load(path, options)` | `path`: String<br>`options`: Object | Asynchronously creates and initializes a Lyrica instance | `await Lyrica.load("lyrics.lrc", {type: "sync"})` |
+
+### Core Methods
+
+| Method | Parameters | Return Value | Description | Example |
+|--------|------------|--------------|-------------|----------|
+| `getData()` | None | Object | Returns all lyrics data including times, lyrics text, and metadata | `example.getData()` |
+| `getCurrent()` | None | Array | Returns current lyric info `[text, time, index]`. Only works in "sync" mode | `example.getCurrent()` |
+| `start()` | None | None | Starts syncing lyrics with audio. Only works in "sync" mode | `example.start()` |
+| `pause()` | None | None | Pauses lyric syncing. Only works in "sync" mode | `example.pause()` |
+
+### Navigation Methods
+
+| Method | Parameters | Return Value | Description | Example |
+|--------|------------|--------------|-------------|----------|
+| `next(distance)` | `distance`: Number (optional) | Array/undefined | Jumps to next lyric. Returns `[text, time, index]` or `undefined` | `example.next()` or `example.next(2)` |
+| `previous(distance)` | `distance`: Number (optional) | Array/undefined | Jumps to previous lyric. Returns `[text, time, index]` or `undefined` | `example.previous()` or `example.previous(2)` |
+| `last()` | None | Array/undefined | Returns to last played lyric. Returns `[text, time, index]` or `undefined` | `example.last()` |
+
+### Search Methods
+
+| Method | Parameters | Return Value | Description | Example |
+|--------|------------|--------------|-------------|----------|
+| `searchLyric(time, exact, index)` | `time`: String/Number<br>`exact`: Boolean<br>`index`: Boolean | Array | Finds lyrics by timestamp | `example.searchLyric("1:30.00", false, true)` |
+| `searchTime(lyric, index)` | `lyric`: String<br>`index`: Boolean | Array | Finds timestamp(s) for given lyric text | `example.searchTime("Hello", true)` |
+| `goTo(place)` | `place`: Object | Array/undefined | Jumps to specific position by time, lyric text, or index | `example.goTo({time: "1:30.00"})` |
+
+--------
 ## CSS Classes
 * Each lyric line is rendered inside an element with the class `.lyric` (applies to both normal and slide modes).
 * Active state:
