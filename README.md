@@ -1,3 +1,9 @@
+<h4 align="center">
+  <a href="https://mahan-ameri.github.io/Lyrica.js/">Demo</a> |
+  <a href="https://www.npmjs.com/package/lyrica">npm</a> |
+  <a href="#-basic-usage">Documention</a>
+</h4>
+
 # 🎵 Lyrica.js
 Lyrica is a lightweight and optimized JavaScript library for working with both standard and advanced `.lrc` lyric files — perfect for music players, karaoke apps, or any project that needs lyric synchronization and `.lrc` data extraction.
 
