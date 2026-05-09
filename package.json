@@ -24,8 +24,7 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup -c",
-    "prepublishOnly": "npm run build"
+    "build": "rollup -c"
   },
   "author": "mahan-ameri <mahanameri142@gmail.com>",
   "license": "MIT",
