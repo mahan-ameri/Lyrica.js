@@ -3,10 +3,17 @@ class Lyrica {
         this.lyricsText = lyrics;
         this.options = options;
 
+        this.times = [];
+        this.lines = [];
+        this.metadata = {};
+        this.linesCounts = [];
+
         this.validateInputs()
+        this.parseLrc(lyrics)   
     }
     validateInputs() {
-        const {lyricsText, options} = this;
+        const { lyricsText } = this;
+        let { options } = this;
         const validTypes = ["sync", "print", "parse"];
         const validAnimationTypes = ["scroll", "solid"];
         const defaults = {
@@ -66,6 +73,11 @@ class Lyrica {
         //  Handling Default Options.
         const mergedOptions = {...defaults, ...options, animations: {...defaults.animations, ...options.animations}}
         
+        options = mergedOptions;
+        options.actAdvanced = options.isAdvanced;
+
+        this.options = options;
+        
         //  Validating options.
         const optionsConds = [
             /*options-type*/ [options.type && !validTypes.includes(options.type), `"${options.type}" is not a valid type.\n- (Valid Types: "${validTypes.join('", "')}")`],
@@ -80,6 +92,110 @@ class Lyrica {
         if (missingOptions.length > 0) {
             throw new Error(`Required attributes are missing: "${missingOptions.join('", "')}"`);
         }
+    }
+    
+    parseLrc(lrcText) {
+        const { options } = this;
+        this.times = [];
+        this.lines = [];
+        this.metadata = {};
+        let linesCounts = [];
+        const entries = [];
+
+        const lines = lrcText.split(/\r?\n|\r|\n/g);
+
+        for (const line in lines) {
+            const parsedTimeAndText = this.parseTimeAndText(lines[line]);
+
+            if (parsedTimeAndText) {
+                const { times, text, counter } = parsedTimeAndText;
+
+                if (options.isAdvanced && options.actAdvanced) {
+                    const advancedTimes = times.pop();
+                    for (const time of advancedTimes) {
+                        const millis = this.timeToMilliseconds(time);
+                        if (!isNaN(millis)) {
+                            entries.push({ time: millis })
+                        }
+
+                    }
+                }
+
+                for (const time of times) {
+                    const millis = this.timeToMilliseconds(time)
+                    if (!isNaN(millis)) {
+                        entries.push({ time: millis, lyric: text, counter: counter })
+                    }
+                }
+            }
+        }
+
+        entries.sort((a, b) => a.time - b.time);
+        this.times = entries.map(entry => entry.time);
+        this.lines = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
+        linesCounts = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
+        
+        this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
+        
+        let sum = 0;
+        const result = [];
+        for (const count of linesCounts) {
+            result.push([count, sum]);
+            sum += count
+        }
+        this.linesCounts = result;
+    }
+
+    parseTimeAndText(line) {
+        const { options } = this
+        const timeRegex = /\[(\d+):(\d{2})\.(\d{1,5})\]/g;
+        const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
+        const advancedRegex = /<(\d{2}):(\d{2})\.(\d{2,3})>([^<]*)/g;
+        const times = [], advancedTimes = [], texts = [];
+        let match, hasTime = false, lineText, counter = null;
+
+        //  Storing multiple line-times(not word-times)
+        while ((match = timeRegex.exec(line)) !== null) {
+            hasTime = true
+            const [_, min, sec, ms] = match;
+            times.push([min, sec, ms])
+        }
+
+        if (hasTime) {
+            const lastMatch = [...line.matchAll(timeRegex)].pop();
+            lineText = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;            
+
+            //  Storing word-times(advanced)
+            if (lineText !== false && options.isAdvanced) {
+                let match;
+                
+                while ((match = advancedRegex.exec(lineText)) !== null) {
+                    const [_, min, sec, ms] = match;
+                    advancedTimes.push([min, sec, ms]);
+                    texts.push(match[4]);
+                }
+                if (texts.length === 0) texts.push(lineText)
+                if (options.actAdvanced) {
+                    times.push(advancedTimes)
+                }
+
+                counter = options.actAdvanced ? texts.length + 1 : null
+            }
+            const text = options.isAdvanced ? options.actAdvanced ? texts : String(texts.join('')) : lineText
+            
+            return { times, text, counter };
+        }else if (line !== '') {
+            const metaMatch = metaRegex.exec(line)
+            if (metaMatch) {
+                this.metadata[metaMatch[1]] = metaMatch[2];
+                return false
+            }
+        }
+    }
+
+    timeToMilliseconds([min, sec, ms]) {
+        const paddedMs = ms.padEnd(3, '0').slice(0, 3);
+        return ( parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(paddedMs) );
     }
 }
 
