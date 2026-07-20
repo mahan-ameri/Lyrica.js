@@ -1,160 +1,158 @@
 class Lyrica {
-    constructor(path, options) {
-        this.path = path;
+    constructor(lyrics, options) {
+        this.lyricsText = lyrics;
         this.options = options;
+
         this.times = [];
-        this.lyrics = [];
-        this.lyricsCounts = []
+        this.lines = [];
+        this.linesCounts = []
         this.metadata = {};
+
         this.gCurrentLyric, this.lastPlayedLyric;
         this.contaScroll = true;
 
         this.validateInputs();
+        this.parseLrc();
     }
 
     validateInputs() {
-        this.validateOptions();
-        this.validatePath();
-        this.validateSelectors();
-        this.validateAnimation();
-
-        this.init();
-    }
-
-    validatePath() {
-        if (typeof this.path !== "string" || this.path === "" && !this.isRaw) {
-            throw new Error("File's path is required and should be a string.");
+        const { lyricsText } = this;
+        let { options } = this;
+        const validTypes = ["sync", "print", "parse"];
+        const validAnimationTypes = ["scroll", "solid"];
+        const defaults = {
+            type: "parse",
+            offset: 0,
+            isAdvanced: false,
+            actAdvanced: 'isAdvanced value',
+            animations: {
+                type: "solid",
+                autoScroll: true,
+                wheelScroll: true,
+                touchScroll: true,
+                changeOnclick: true
+            }
         }
-        if (!this.path.endsWith(".lrc") && !this.isRaw) {
-            throw new Error("File's path should have a valid '.lrc' format.");
+        const optionsDataTypes = {
+            boolean: ["isAdvanced", "actAdvanced", "autoStart"],
+            string: ["type"],
+            object: ["animations", "audioElement", "containerElement"],
+            number: ["offset"]
         }
-    }
-
-    validateOptions() {
-        if (!this.options) {
-            throw new Error("Options object is required.");
-        }
-
-        const validTypes = ["sync", "print", "extract"];
-        if (!this.options.type || !validTypes.includes(this.options.type)) {
-            throw new Error(`"${this.options.type}" is not a valid type.\n- (Valid types: "${validTypes.join('", "')}")`);
+        const animationsDataTypes = {
+            boolean: ["autoScroll", "wheelScroll", "touchScroll"],
+            string: ["type", "keyframeId", "parameters"]
         }
 
-        const requiredOptions = this.getRequiredOptionsByType();
-        const missingOptions = requiredOptions.filter(option => !this.options[option]);
+        const checkConds = function(consArray) {
+            consArray.forEach(cond => {
+                if (cond[0]) {
+                    throw new Error(cond[1])
+                }
+            })
+        }
+        const getRequiredOptionsByType = function() {
+            switch (options.type) {
+                case "parse":
+                    return [];
+                case "print":
+                    return ['containerElement'];
+                default:
+                    return ['audioElement', 'containerElement'];
+            }
+        }
+
+
+        const basicConds = [
+            /*lyric*/ [typeof lyricsText !== "string", "Lyric is required and should be a string."],
+            /*options*/ [!options, "Options object is required."]
+        ]
+        checkConds(basicConds)
+
+        //  Validating options data types.
+        for (let dtyp in optionsDataTypes) {
+            optionsDataTypes[dtyp].forEach(optn => {
+                if (options[optn] !== undefined && typeof options[optn] !== dtyp) {
+                    throw new Error(`${optn} has to be a/an ${dtyp}.`)
+                }
+            })
+        }
+
+        //  Handling Default Options.
+        const mergedOptions = {...defaults, ...options, animations: {...defaults.animations, ...options.animations}}
+        
+        options = mergedOptions;
+        options.actAdvanced = options.isAdvanced;
+
+        this.options = options;
+        
+        //  Validating options.
+        const optionsConds = [
+            /*options-type*/ [options.type && !validTypes.includes(options.type), `"${options.type}" is not a valid type.\n- (Valid Types: "${validTypes.join('", "')}")`],
+            /*options-animations*/ [options.animations && !validAnimationTypes.includes(options.animations.type), `"${this.options.animations.type}" is not a valid animation type.\n- (Valid Animations: "${validAnimationTypes.join('", "')}")`],
+            /*options-audioElement*/ [options.audioElement && !(options.audioElement instanceof HTMLAudioElement), "Invalid audio element: Please provide a valid `<audio>` HTML element."]
+        ]
+        checkConds(optionsConds)
+
+        //  Checking required options.
+        const requiredOptions = getRequiredOptionsByType();
+        const missingOptions = requiredOptions.filter(option => !options[option]);
         if (missingOptions.length > 0) {
             throw new Error(`Required attributes are missing: "${missingOptions.join('", "')}"`);
         }
-
-        this.karaoke = this.options.isKaraoke ?? false;
-        this.actKaraoke = this.options.actKaraoke ?? this.karaoke;
-        this.isRaw = this.options.isRaw ?? false;
-        this.auto_start = this.options.autoStart ?? true;
     }
 
-    getRequiredOptionsByType() {
-        switch (this.options.type) {
-            case "extract":
-                return [];
-            case "print":
-                return ['container_selector'];
-            default:
-                return ['audio_selector', 'container_selector'];
-        }
-    }
-
-    validateSelectors() {
-        const selectors = this.getRequiredOptionsByType();
-        selectors.forEach(selector => {
-            const value = this.options[selector];
-            if (value && !["#", "."].includes(value.charAt(0))) {
-                throw new Error(`Element selector for "${selector}" must start with "#" or ".".`);
-            }
-            const test = document.querySelector(value);
-            if (test === null) {
-                throw new Error(`${value} is not a valid selector.`)
-            }
-            
-        });
-    }
-
-    validateAnimation() {
-        const validAnimations = ["normal", "slide"];
-        if (this.options.animations && !validAnimations.includes(this.options.animations.animation_type)) {
-            throw new Error(`"${this.options.animations.animation_type}" is not a valid animation type.\n- (Valid animations: "${validAnimations.join('", "')}")`);
-        }
-    }
-
-    static async load(path, options) {
-        const LrcAsync = new Lyrica(path, options);
-        await LrcAsync.init();
-        return LrcAsync;
-    }
-    async init() {
-        if (!this.isRaw) {
-            try {
-                const response = await fetch(this.path);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! Status: ${response.status}`);
-                }
-                const lrcText = await response.text();
-                this.extractLrc(lrcText);
-            } catch (error) {
-                console.error('Error fetching LRC:', error);
-            }
-        } else {
-            this.extractLrc(this.path)
-        }
-
-    }
-
-    extractLrc(lrcText) {
+    parseLrc(lrcText) {
+        const { options } = this;
         this.times = [];
-        this.lyrics = [];
+        this.lines = [];
         this.metadata = {};
-        let entries = [];
+        let linesCounts = [];
+        const entries = [];
 
         const lines = lrcText.split(/\r?\n|\r|\n/g);
 
-        lines.forEach(line => {
-            const ret = this.extractTimeAndText(line);
-            
-            if (ret[0]) {
-                const { times, text, counter } = ret[1];
-                if (this.karaoke && this.actKaraoke) {
-                    const karoakeTimes = times.pop();
-                    for (const timeArr of karoakeTimes) {
-                        const millis = this.timeToMilliseconds(timeArr);
+        for (const line in lines) {
+            const parsedTimeAndText = this.parseTimeAndText(lines[line]);
+
+            if (parsedTimeAndText) {
+                const { times, text, counter } = parsedTimeAndText;
+
+                if (options.isAdvanced && options.actAdvanced) {
+                    const advancedTimes = times.pop();
+                    for (const time of advancedTimes) {
+                        const millis = this.timeToMilliseconds(time);
                         if (!isNaN(millis)) {
-                            entries.push({ time: millis});
+                            entries.push({ time: millis })
                         }
+
                     }
                 }
-                
-                for (const timeArr of times) {
-                    const millis = this.timeToMilliseconds(timeArr);
+
+                for (const time of times) {
+                    const millis = this.timeToMilliseconds(time)
                     if (!isNaN(millis)) {
-                        entries.push({ time: millis, lyric: text, counter: counter });
+                        entries.push({ time: millis, lyric: text, counter: counter })
                     }
                 }
             }
-        });
+        }
 
         entries.sort((a, b) => a.time - b.time);
-
         this.times = entries.map(entry => entry.time);
-        this.lyrics = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
-        this.lyricsCounts = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
-
-        this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
-
-        let hldr = 0;
-        const lt = this.lyricsCounts.length;
-        for (let i=0; i < lt; i++) {
-            this.lyricsCounts[i] = [this.lyricsCounts[i], hldr];
-            hldr+=this.lyricsCounts[i][0]
-        }
+        this.lines = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
+        linesCounts = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
         
+        this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
+        
+        const result = [];
+        linesCounts.reduce((sum, count)=>{
+            result.push([count, sum])
+            return sum+=count
+        }, 0)
+        
+        this.linesCounts = result;
+
         this.typesHandler()
     }
 
@@ -256,48 +254,51 @@ class Lyrica {
         }
     }
     
-    extractTimeAndText(line) {
+    parseTimeAndText(line) {
+        const { options } = this
         const timeRegex = /\[(\d+):(\d{2})\.(\d{1,5})\]/g;
         const metaRegex = /\[([a-zA-Z0-9]+):\s*([^\]]+)\]/;
-        const karaokeRegex = /<(\d{2}):(\d{2})\.(\d{2,3})>([^<]*)/g;
-        const times = [], texts = [];
-        let match, isValid = false, textSingle, counters;
+        const advancedRegex = /<(\d{2}):(\d{2})\.(\d{2,3})>([^<]*)/g;
+        const times = [], advancedTimes = [], texts = [];
+        let match, hasTime = false, lineText, counter = null;
 
+        //  Storing multiple line-times(not word-times)
         while ((match = timeRegex.exec(line)) !== null) {
-            isValid = true;
+            hasTime = true
             const [_, min, sec, ms] = match;
-            times.push([min, sec, ms]);
+            times.push([min, sec, ms])
         }
-        if (isValid) {
-            const lastMatch = [...line.matchAll(timeRegex)].pop();
-            textSingle = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;
-            if (textSingle !== false && this.karaoke) {
-                const fLine = line.replace(/\[[a-zA-Z0-9_]+:.*?\]/g, '');
 
+        if (hasTime) {
+            const lastMatch = [...line.matchAll(timeRegex)].pop();
+            lineText = lastMatch ? line.slice(lastMatch.index + lastMatch[0].length) : false;            
+
+            //  Storing word-times(advanced)
+            if (lineText !== false && options.isAdvanced) {
                 let match;
-                const karoakeTimes = []
-                while ((match = karaokeRegex.exec(fLine)) !== null) {
+                
+                while ((match = advancedRegex.exec(lineText)) !== null) {
                     const [_, min, sec, ms] = match;
-                    karoakeTimes.push([min, sec, ms]);
+                    advancedTimes.push([min, sec, ms]);
                     texts.push(match[4]);
                 }
-                if (this.actKaraoke) {
-                    times.push(karoakeTimes);
+                if (texts.length === 0) texts.push(lineText)
+                if (options.actAdvanced) {
+                    times.push(advancedTimes)
                 }
-                counters = texts.length + 1;
+
+                counter = options.actAdvanced ? texts.length + 1 : null
             }
+            const text = options.isAdvanced ? options.actAdvanced ? texts : String(texts.join('')) : lineText
+            
+            return { times, text, counter };
         }else if (line !== '') {
-            const meta = metaRegex.exec(line);
-            if (meta) {
-                this.metadata[meta[1]] = meta[2];
+            const metaMatch = metaRegex.exec(line)
+            if (metaMatch) {
+                this.metadata[metaMatch[1]] = metaMatch[2];
             }
         }
-
-        const text = this.karaoke ? this.actKaraoke ? texts.length > 0 ? texts : [textSingle] : String(texts.join('')) : textSingle, counter = this.karaoke && this.actKaraoke ? counters : null ;
-        
-
-        return [isValid, isValid ? { times, text, counter} : null];
-        
+        return false
     }
 
     timeToMilliseconds([min, sec, ms]) {
