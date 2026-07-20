@@ -20,9 +20,13 @@ class Lyrica {
             type: "parse",
             offset: 0,
             isAdvanced: false,
-            actAdvanced: false,
+            actAdvanced: 'isAdvanced value',
             animations: {
-                type: "solid"
+                type: "solid",
+                autoScroll: true,
+                wheelScroll: true,
+                touchScroll: true,
+                changeOnclick: true
             }
         }
         const optionsDataTypes = {
@@ -137,13 +141,16 @@ class Lyrica {
         
         this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
         
-        let sum = 0;
         const result = [];
-        for (const count of linesCounts) {
-            result.push([count, sum]);
-            sum += count
-        }
+        linesCounts.reduce((sum, count)=>{
+            result.push([count, sum])
+            return sum+=count
+        }, 0)
+        console.log(result);
+        
         this.linesCounts = result;
+
+        this.typesHandler()
     }
 
     parseTimeAndText(line) {
@@ -197,6 +204,69 @@ class Lyrica {
         const paddedMs = ms.padEnd(3, '0').slice(0, 3);
         return ( parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(paddedMs) );
     }
-}
 
+    typesHandler() {
+        const { type, containerElement, audioElement, animations } = this.options, { times } = this
+        if (times.length === 0 || type === 'parse') return
+
+        this.container = containerElement
+        this.audio = audioElement
+
+        switch(type) {
+            case 'sync':
+                if (animations.type === 'slide') this.syncScrollHnadler()
+                this.renderLyrics()
+                break
+            case 'print':
+                this.renderLyrics()
+                break
+        }
+    }
+
+    syncScrollHnadler() {
+        const { wheelScroll, touchScroll, changeOnclick} = this.options.animations 
+
+        this.container.scrollTo({ top: 0 });
+
+        if (wheel_scroll) {
+            let scrollEndTimer, waitToSureTimer;
+
+        }
+    }
+
+    renderLyrics() {
+        const { times, lines, linesCounts, container, offset} = this, { isAdvanced, actAdvanced } = this.options;
+        const fragment = document.createDocumentFragment();
+
+        //there's a bug here
+        if (isAdvanced) {
+            const elementType = actAdvanced ? 'div' : 'p';
+            for (const lineNumber in lines) {
+                const line = document.createElement(elementType);
+                if (actAdvanced) {
+                    lines[lineNumber].forEach(element => {
+                        const wordP = document.createElement('p')
+                        wordP.textContent = element
+                        line.appendChild(wordP)
+                    })
+                    line.setAttribute("data-time", (times[linesCounts[lineNumber][1]] - offset))
+                }else {
+                    line.textContent = lyrics[lineNumber]
+                    line.setAttribute("data-time", (times[lineNumber] - offset))
+                }
+                line.classList.add('line')
+                line.setAttribute("index", lineNumber)
+                this.container.appendChild(line)
+            }
+        }else {
+            for (const lineNumber in lines) {
+                const line = document.createElement("p")
+                line.textContent = lyrics[lineNumber];
+                line.classList.add("lyric");
+                line.setAttribute("data-time", (times[lineNumber] - offset));
+                container.appendChild(p);
+            }
+        }
+    }
+}
 export default Lyrica
