@@ -4,25 +4,29 @@
   <a href="#-basic-usage">Documention</a>
 </h4>
 
-# 🎵 Lyrica.js
-Lyrica is a lightweight and optimized JavaScript library for working with both standard and advanced `.lrc` lyric files — perfect for music players, karaoke apps, or any project that needs lyric synchronization and `.lrc` data extraction.
+# Lyrica.js
+
+Lyrica.js is an open-source JavaScript library for working with `.lrc` lyric files.
+It provides tools for parsing lyrics, synchronizing them with audio, rendering them in the browser, and extracting structured lyric data.
+
+Lyrica.js is under development, and some APIs may change between releases as the architecture continues to improve.
 
 ![preview](https://github.com/user-attachments/assets/3f9ba634-4e7e-432e-9863-c7f9bd199531)
-## ✨ Features
-* Modes:
+## Features
+* Core Features:
     * Sync - Render lyrics and synchronize them in real time with an HTML `<audio>` element.
 
     * Print - Render lyrics from `.lrc` files without syncing.
 
     * Extract - Parse .lrc files to get structured lyric, timing, and metadata data.
 
-* Animations - Two styles: `normal` (static) and `slide`. Optional auto-scroll, wheel/touch scroll handling, and click-to-seek.
+* Rendering - Two styles: `normal` (static) and `slide`. Optional auto-scroll, wheel/touch scroll handling, and click-to-seek.
 
-* Full-control - Start, pause, next, previous, go to a specific lyric/time, retrieve current lyric info in real-time.
+* Playback Control - Start, pause, next, previous, go to a specific lyric/time, retrieve current lyric info in real-time.
 
 * Search - Find a lyric by time or find the timestamp(s) for a given lyric.
 
-## 📦 Installation
+## Installation
 #### via npm
 ```console
 npm i lyrica
@@ -34,7 +38,7 @@ npm i lyrica
 <script src="./Lyrica.umd.js"></script>
 ```
 
-# ☄️ Quick Start
+#  Quick Start
 HTML:
 ```html
 <audio id="my-audio" src="song.mp3" controls></audio>
@@ -53,7 +57,7 @@ const example = new Lyrica("./example.lrc", {
 });
 ```
 
-# 🏫 Basic Usage
+# Basic Usage
 ## Path
 The first parameter is a string that can be either a `.lrc` file path or raw `.lrc` text. (required)
 
@@ -153,24 +157,7 @@ The second parameter is an options object that configures the class.(required)
 * In `karaoke + actKaraoke`, the line itself still has the `.lyric` class, but instead of plain text, its words are split into `<span>`s so timing can highlight each word individually.
 
 ---------
-# 🎁 Support This Project
-
-If you find this project useful and would like to support its journey, consider sending a small donation— I’d be truly grateful. ✨
-
-### EVM Wallet (MetaMask):
-
-```
-0x22aDc02620D92973705F0274F6b0A5D8718b54B7
-```
-\- ✅ Supports Ethereum, Polygon, BNB Chain, and other EVM networks
-
-### Bitcoin:
-```
-bc1ql3p5a9fgssrqqsu4mf6ckqk4xxkn74p6gqpqj9
-```
-
-
-# 📝 License
+# License
 MIT License © mahan-ameri
 
 ---
