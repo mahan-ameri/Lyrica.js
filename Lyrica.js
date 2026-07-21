@@ -12,7 +12,7 @@ class Lyrica {
         this.contaScroll = true;
 
         this.validateInputs();
-        this.parseLrc();
+        this.parseLrc(lyrics);
     }
 
     validateInputs() {
@@ -24,7 +24,7 @@ class Lyrica {
             type: "parse",
             offset: 0,
             isAdvanced: false,
-            actAdvanced: 'isAdvanced value',
+            doAdvanced: undefined,
             animations: {
                 type: "solid",
                 autoScroll: true,
@@ -34,7 +34,7 @@ class Lyrica {
             }
         }
         const optionsDataTypes = {
-            boolean: ["isAdvanced", "actAdvanced", "autoStart"],
+            boolean: ["isAdvanced", "doAdvanced", "autoStart"],
             string: ["type"],
             object: ["animations", "audioElement", "containerElement"],
             number: ["offset"]
@@ -82,7 +82,7 @@ class Lyrica {
         const mergedOptions = {...defaults, ...options, animations: {...defaults.animations, ...options.animations}}
         
         options = mergedOptions;
-        options.actAdvanced = options.isAdvanced;
+        options.doAdvanced = options.doAdvanced === undefined ? options.isAdvanced : options.doAdvanced;
 
         this.options = options;
         
@@ -112,13 +112,13 @@ class Lyrica {
 
         const lines = lrcText.split(/\r?\n|\r|\n/g);
 
-        for (const line in lines) {
-            const parsedTimeAndText = this.parseTimeAndText(lines[line]);
+        for (const line of lines) {
+            const parsedTimeAndText = this.parseTimeAndText(line);
 
             if (parsedTimeAndText) {
                 const { times, text, counter } = parsedTimeAndText;
 
-                if (options.isAdvanced && options.actAdvanced) {
+                if (options.isAdvanced && options.doAdvanced) {
                     const advancedTimes = times.pop();
                     for (const time of advancedTimes) {
                         const millis = this.timeToMilliseconds(time);
@@ -157,13 +157,29 @@ class Lyrica {
     }
 
     typesHandler() {
-        const type = this.options.type;
+
+    }
+    typesHandler() {
+        const { options, times } = this;
+
+        if (times.length == 0) return
+
+        switch (this.options.type) {
+            case "parse":
+                break
+            case "print":
+                this.container = options.containerElement
+                this.renderLyrics()
+                break
+            case "sync":
+
+                break
+        }
 
         if (this.times.length !== 0) {
-            if (type === "extract") {
-                // Perform actions for 'extract' type
-            } else if (type === "sync") {
-                this.container = document.querySelector(this.options.container_selector);
+            if (options.type === "sync") {
+
+                this.container = this.options.containerElement
                 this.audio = document.querySelector(this.options.audio_selector);
                 if (this.options.animations && this.options.animations.animation_type === "slide") {
                     this.container.scrollTo({ top: 0 });
@@ -243,14 +259,12 @@ class Lyrica {
                     }
                 }
                 this.syncLyrics()
-            } else if (type === "sync") {
+            } else if (this.type === "sync") {
                 this.container = document.querySelector(this.options.container_selector);
                 this.syncLyrics();
-            } else if (type === "print") {
+            } else if (this.type === "print") {
                 this.renderLyrics();
             }
-        }else {
-            console.warn("No valid lyrics found in the provided LRC file.");
         }
     }
     
@@ -283,13 +297,13 @@ class Lyrica {
                     texts.push(match[4]);
                 }
                 if (texts.length === 0) texts.push(lineText)
-                if (options.actAdvanced) {
+                if (options.doAdvanced) {
                     times.push(advancedTimes)
                 }
 
-                counter = options.actAdvanced ? texts.length + 1 : null
+                counter = options.doAdvanced ? texts.length + 1 : null
             }
-            const text = options.isAdvanced ? options.actAdvanced ? texts : String(texts.join('')) : lineText
+            const text = options.isAdvanced ? options.doAdvanced ? texts : String(texts.join('')) : lineText
             
             return { times, text, counter };
         }else if (line !== '') {
@@ -307,30 +321,23 @@ class Lyrica {
     }
 
     renderLyrics() {
-        const { times, lyrics, lyricsCounts, offset} = this;
-        const container = document.querySelector(this.options.container_selector);
-        const isAutoScroll = this.options.animations && this.options.animations.auto_scroll;
+        const { options, times, lines, linesCounts, offset, container} = this;
         const fragment = document.createDocumentFragment();
-
-        if (isAutoScroll) {
-            const start = document.createElement('span')
-            start.classList.add("segap");
-            fragment.appendChild(start);
-        }
         
-        if (this.karaoke) {
-            for (let i = 0; i < lyrics.length; i++) {
-                const elType = this.actKaraoke ? "div" : "p"
-                const p = document.createElement(elType);
-                if (this.actKaraoke) {
-                    lyrics[i].forEach(el => {
+        if (options.isAdvanced) {
+            for (const i in lines) {
+                const elementType = options.doAdvanced ? "div" : "p"
+                const p = document.createElement(elementType);
+                
+                if (options.doAdvanced) {
+                    for (const element of lines[i]) {
                         const litt = document.createElement("p");
-                        litt.textContent = el;
+                        litt.textContent = element;
                         p.appendChild(litt)
-                    });
-                    p.setAttribute("data-time", (times[lyricsCounts[i][1]] - offset));
+                    }
+                    p.setAttribute("data-time", (times[linesCounts[i][1]] - offset));
                 }else {
-                    p.textContent = lyrics[i]
+                    p.textContent = lines[i]
                     p.setAttribute("data-time", (times[i] - offset));
                 }
                 p.classList.add("lyric");
@@ -338,20 +345,13 @@ class Lyrica {
                 fragment.appendChild(p);
             }
         }else {
-            for (let i = 0; i < lyrics.length; i++) {
+            for (const i in lines) {
                 const p = document.createElement("p");
-                p.textContent = lyrics[i];
+                p.textContent = lines[i];
                 p.classList.add("lyric");
                 p.setAttribute("data-time", (times[i] - offset));
                 fragment.appendChild(p);
             }
-        }
-        
-
-        if (isAutoScroll) {
-            const end = document.createElement('span');
-            end.classList.add("segap");
-            fragment.appendChild(end)
         }
 
         container.appendChild(fragment);

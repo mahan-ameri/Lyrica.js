@@ -58,6 +58,9 @@ const example = new Lyrica("./example.lrc", {
 ```
 
 # Basic Usage
+```javascript
+const example = new Lyrica(Path, Options)
+```
 ## Path
 The first parameter is a string that can be either a `.lrc` file path or raw `.lrc` text. (required)
 
