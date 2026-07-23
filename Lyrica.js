@@ -25,6 +25,7 @@ class Lyrica {
             offset: 0,
             isAdvanced: false,
             doAdvanced: undefined,
+            autoStart: true,
             animations: {
                 type: "solid",
                 autoScroll: true,
@@ -142,9 +143,7 @@ class Lyrica {
         this.times = entries.map(entry => entry.time);
         this.lines = entries.filter(entry => entry.lyric !== undefined).map(entry => entry.lyric);
         linesCounts = entries.filter(entry => entry.counter !== undefined && entry.counter !== null).map(entry => entry.counter);
-        
-        this.offset = this.options.offset ?? (Number(this.metadata?.offset) || 0);
-        
+                
         const result = [];
         linesCounts.reduce((sum, count)=>{
             result.push([count, sum])
@@ -153,12 +152,11 @@ class Lyrica {
         
         this.linesCounts = result;
 
+        this.offset = this.options.offset ?? (Number(this.metadata.offset) || 0);
+
         this.typesHandler()
     }
 
-    typesHandler() {
-
-    }
     typesHandler() {
         const { options, times } = this;
 
@@ -172,99 +170,92 @@ class Lyrica {
                 this.renderLyrics()
                 break
             case "sync":
-
-                break
-        }
-
-        if (this.times.length !== 0) {
-            if (options.type === "sync") {
-
-                this.container = this.options.containerElement
-                this.audio = document.querySelector(this.options.audio_selector);
-                if (this.options.animations && this.options.animations.animation_type === "slide") {
-                    this.container.scrollTo({ top: 0 });
-                    let scrollEndTimer, waitToSureTimer;
-                    const wheel_scroll = this.options.animations?.wheel_scroll ?? true, touch_scroll = this.options.animations?.touch_scroll ?? true, change_onclick = this.options.animations?.change_onclick ?? true;
-
-                    if (wheel_scroll) {
-                        this.container.addEventListener("wheel", () => {
-                            clearTimeout(scrollEndTimer);
-                            clearTimeout(waitToSureTimer);
-
-                            if (this.contaScroll) {
-                                this.contaScroll = false;
-                            }
-
-                            scrollEndTimer = setTimeout(() => {
-                                waitToSureTimer = setTimeout(() => {
-                                    const currentIndex = this.gCurrentLyric?.[2] || 0;
-                                    const contaHeight = this.container.offsetHeight;
-                                    const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 2)})`);
-                                    const lyricHeight = lyricEl.offsetHeight;
-                                    const lyricTop = lyricEl.offsetTop;
-                                    const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
-
-                                    this.container.scrollTo({
-                                        top: calcTop,
-                                        behavior: 'smooth'
-                                    });
-                                    this.contaScroll = true;
-                                }, 2000);
-                            }, 150);
-                        });
-                    }
-
-                    if (touch_scroll) {
-                        this.container.addEventListener("touchstart", () => {
-                            clearTimeout(waitToSureTimer)
-                            if (this.contaScroll) {
-                                this.contaScroll = false;
-                            }
-                        });
-                        this.container.addEventListener("touchend", () => {
-                            waitToSureTimer = setTimeout(() => {
-                                    const currentIndex = this.gCurrentLyric?.[2] || 0;
-                                    const contaHeight = this.container.offsetHeight;
-                                    const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 2)})`);
-                                    const lyricHeight = lyricEl.offsetHeight;
-                                    const lyricTop = lyricEl.offsetTop;
-                                    const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
-
-                                    this.container.scrollTo({
-                                        top: calcTop,
-                                        behavior: 'smooth'
-                                    });
-                                    this.contaScroll = true;
-                                }, 2000);
-                        });
-                    }
-
-                    if (change_onclick) {
-                        this.container.addEventListener("click", (e) => {
-                            const lyric = e.target.closest(".lyric");
-                            if (lyric !== null) {
-                                let time = lyric.getAttribute("data-time");
-                                this.audio.currentTime = (Number(time) / 1000) + 0.2;
-                            }
-                        })
-                    }
-
-                    this.renderLyrics()
-                    if (this.options.animations && this.options.animations.auto_scroll) {
-                        let segap = this.container.querySelectorAll(".segap")
-                        segap.forEach(el => {
-                            el.style.height = '55.5%'
-                            el.style.width = "100%"
-                        })
-                    }
+                this.container = options.containerElement
+                this.audio = options.audioElement
+                if (options.animations.type === "scroll") {
+                    this.scrollSyncHandler()
                 }
                 this.syncLyrics()
-            } else if (this.type === "sync") {
-                this.container = document.querySelector(this.options.container_selector);
-                this.syncLyrics();
-            } else if (this.type === "print") {
-                this.renderLyrics();
-            }
+                break
+        }
+    }
+
+    scrollSyncHandler() {
+        this.container.scrollTo({ top: 0 });
+        let scrollEndTimer, waitToSureTimer;
+        const wheel_scroll = this.options.animations.wheelScroll, touch_scroll = this.options.animations.touchScroll, change_onclick = this.options.animations.changeOnclick;
+
+        if (wheel_scroll) {
+            this.container.addEventListener("wheel", () => {
+                clearTimeout(scrollEndTimer);
+                clearTimeout(waitToSureTimer);
+
+                if (this.contaScroll) {
+                    this.contaScroll = false;
+                }
+
+                scrollEndTimer = setTimeout(() => {
+                    waitToSureTimer = setTimeout(() => {
+                        const currentIndex = this.gCurrentLyric?.[2] || 0;
+                        const contaHeight = this.container.offsetHeight;
+                        const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
+                        const lyricHeight = lyricEl.offsetHeight;
+                        const lyricTop = lyricEl.offsetTop;
+                        const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
+
+                        this.container.scrollTo({
+                            top: calcTop,
+                            behavior: 'smooth'
+                        });
+                        this.contaScroll = true;
+                    }, 2000);
+                }, 150);
+            });
+        }
+
+        if (touch_scroll) {
+            this.container.addEventListener("touchstart", () => {
+                clearTimeout(waitToSureTimer)
+                if (this.contaScroll) {
+                    this.contaScroll = false;
+                }
+            });
+            this.container.addEventListener("touchend", () => {
+                waitToSureTimer = setTimeout(() => {
+                        const currentIndex = this.gCurrentLyric?.[2] || 0;
+                        const contaHeight = this.container.offsetHeight;
+                        const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
+                        const lyricHeight = lyricEl.offsetHeight;
+                        const lyricTop = lyricEl.offsetTop;
+                        const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
+
+                        this.container.scrollTo({
+                            top: calcTop,
+                            behavior: 'smooth'
+                        });
+                        this.contaScroll = true;
+                    }, 2000);
+            });
+        }
+
+        if (change_onclick) {
+            this.container.addEventListener("click", (e) => {
+                const lyric = e.target.closest(".lyric");
+                if (lyric !== null) {
+                    let time = lyric.getAttribute("data-time");
+                    this.audio.currentTime = (Number(time) / 1000) + 0.2;
+                }
+            })
+        }
+
+        this.renderLyrics()
+        if (this.options.animations.autoScroll) {
+            let segap = this.container.querySelectorAll(".segap")
+            
+            segap.forEach(el => {
+                el.style.height = '55.5%'
+                el.style.width = "100%"
+            })
         }
     }
     
@@ -296,12 +287,14 @@ class Lyrica {
                     advancedTimes.push([min, sec, ms]);
                     texts.push(match[4]);
                 }
-                if (texts.length === 0) texts.push(lineText)
                 if (options.doAdvanced) {
                     times.push(advancedTimes)
                 }
 
+
                 counter = options.doAdvanced ? texts.length + 1 : null
+
+                if (texts.length === 0) texts.push(lineText)
             }
             const text = options.isAdvanced ? options.doAdvanced ? texts : String(texts.join('')) : lineText
             
@@ -358,42 +351,50 @@ class Lyrica {
     }
 
     syncLyrics() {
-        const { times, lyrics, audio, offset, karaoke, actKaraoke, auto_start } = this;
-        const animationType = this.options?.animations?.animation_type || "normal";
-        const karaokeStats = karaoke && actKaraoke;
-        let lastIndex = [0, 0];
+        const { options, times, lines, audio, offset } = this;
+        const animationType = options.animations.type;
+        const advancedState = options.isAdvanced && options.doAdvanced;
+        let currentIndex = [0, 0];
         let interval;
 
         if (times[0] == 0) {
-            this.gCurrentLyric = [lyrics[0], times[0], 0];
+            this.gCurrentLyric = [lines[0], times[0], 0];
         }
 
-        const CheckAll = () => {
-            let currentTime = audio.currentTime * 1000;
-                for (let i = 0; i < times.length; i++) {
-                    if (times[(i+1)] - offset >= (currentTime) || i === (times.length - 1)) {
-                        this.sendLyric(animationType, [lyrics[i], i], '', karaokeStats, true)
-                        lastIndex=[lastIndex[0], currentTime];
-                        lastIndex[0] = i;
-                        break;
-                    }
+        const findIndex = () => {
+            const currentTime = audio.currentTime * 1000;
+            let left = 0, right = times.length - 1, index = 0
+
+            while (left <= right) {
+                const mid = Math.floor((left + right) / 2)
+
+                if ((times[mid] - offset) <= currentTime) {
+                    index = mid
+                    left = mid + 1
+                } else {
+                    right = mid - 1
                 }
-        }
+            }
+
+            this.sendLyric(animationType, index, "", advancedState, true);
+
+            currentIndex = [index, currentTime];
+        };
 
         const sync = () => {
             clearInterval(interval);
-            CheckAll();
+            findIndex();
             interval = setInterval(() => {
                 let currentTime = audio.currentTime * 1000;
-                if (Math.abs(currentTime - lastIndex[1]) < 70) {
-                    if (times[lastIndex[0]] - offset <= currentTime) {
-                        this.sendLyric(animationType, [lyrics[lastIndex[0]], lastIndex[0]], currentTime, karaokeStats, false);
-                        lastIndex = [lastIndex[0] + 1, currentTime];
+                if (Math.abs(currentTime - currentIndex[1]) < 70) {
+                    if (times[currentIndex[0]] - offset <= currentTime) {
+                        this.sendLyric(animationType, currentIndex[0], currentTime, advancedState, false);
+                        currentIndex = [currentIndex[0] + 1, currentTime];
                     } else {
-                        lastIndex = [lastIndex[0], currentTime];
+                        currentIndex = [currentIndex[0], currentTime];
                     }
                 } else {
-                    CheckAll();
+                    findIndex();
                 }
             }, 10);
         };
@@ -406,49 +407,43 @@ class Lyrica {
         this.start = () => sync();
         this.pause = () => stopSync();
 
-        if (auto_start) {
+        if (options.autoStart) {
             audio.addEventListener("play", sync);
             audio.addEventListener("pause", stopSync);
         }
 
-        audio.addEventListener("seeked", CheckAll);
+        audio.addEventListener("seeked", findIndex);
     }
 
-    sendLyric(mode, lyric, currentTime, karaoke, checkAll) {
-        const {lyrics, times, container } = this
+    sendLyric(mode, lineIndex, currentTime, advanced, fromFindIndex) {
+        const {lines, times, container, options} = this
         const defaultSendType = () => {
             const prevLyric = container.querySelector(`.lyric`);
             if (prevLyric) { prevLyric.remove(); }
-            const el = document.createElement('p');
-            el.classList.add("lyric");
-            el.textContent = lyric[0];
-            container.appendChild(el);
-            el.style.animation=`${this.options?.animations?.keyframe_id || 'LyricaLyricIn'} ${this.options?.animations?.animation_parameters || 'ease-out 0.2s'}`;
+            const element = document.createElement('p');
+            element.classList.add("lyric");
+            element.textContent = lines[lineIndex];
+            container.appendChild(element);
 
             clearTimeout()
-            /*
-            let wait = ((Number(this.times[(lyric[1]+1)]) - Number(currentTime)))
-            setTimeout(()=>{
-                el.style.animation="0.2s LrcLyricOut ease-in forwards"
-            }, wait)*/
         }
-        const karaokeDefaultSendType = () => {
+        const advancedDefaultSendType = () => {
             const on = container.querySelector(`.lyric`);
             let over;
             over = on ? on.getAttribute("index") : null;
 
             if (matched[1] == -1 || Number(over) !== matched[0]) {
-                const prevLyric = container.querySelector(`.lyric`);
-                if (prevLyric) { prevLyric.remove(); }
-                const el = document.createElement('div');
-                el.classList.add("lyric");
-                el.setAttribute("index", matched[0])
-                lyrics[matched[0]].forEach(elc => {
-                    const litt = document.createElement("p");
-                    litt.textContent = elc;
-                    el.appendChild(litt)
-                });
-                container.appendChild(el);
+                const prevLyric = container.querySelector(`.lyric`)
+                if (prevLyric) { prevLyric.remove() }
+                const element = document.createElement('div');
+                element.classList.add("lyric")
+                element.setAttribute("index", matched[0])
+                for (const elc of lines[matched[0]]) {
+                    const litt = document.createElement("p")
+                    litt.textContent = elc
+                    element.appendChild(litt)
+                };
+                container.appendChild(element)
             }else {
                 for (let i=0; i<=matched[1]; i++) {
                     container.querySelector(`.lyric p:nth-child(${(i+1)})`).classList.add("active")
@@ -456,32 +451,31 @@ class Lyrica {
             }
         }
 
-        const slideSendType = (iskaraoke) => {
+        const scrollSendType = (isAdvanced) => {
             const pervLyric = container.querySelectorAll(".active")
-            pervLyric.forEach(lyric => {
+            for (const lyric of pervLyric) {
                 lyric.classList.add("passed");
                 lyric.classList.remove("active");
-            });
-            const lyricI = iskaraoke ? matched[0] : lyric[1];
-            if (checkAll) {
+            };
+            const lyricI = isAdvanced ? matched[0] : lineIndex;
+            if (fromFindIndex) {
                 const children = container.children;
                 const passed = container.querySelectorAll('.passed');
                 passed.forEach(psd => {
                     psd.classList.remove("passed");
                 })
-                const forgt = this.options.animations?.auto_scroll? 1 : 0;
-                for (let i=forgt; i <= lyricI; i++) {
+                for (let i=0; i < lyricI; i++) {
                     children[i].classList.add("passed")
                 }
             }
-            const index = this.options.animations?.auto_scroll? (lyricI + 2) : (lyricI + 1);
+            const index = options.animations.autoScroll ? (lyricI + 1) : (lyricI);
             container.querySelector(`.lyric:nth-child(${index})`).classList.add("active")
 
-            if (this.options.animations.auto_scroll && this.contaScroll) {
-                const contaHeight = container.offsetHeight;
-                const lyricHeight = container.querySelector(`.lyric:nth-child(${(lyricI + 2)})`).offsetHeight;
-                const lyricTop = container.querySelector(`.lyric:nth-child(${(lyricI + 2)})`).offsetTop;
-                const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)))
+            if (options.animations.autoScroll && this.contaScroll) {
+                const containerHeight = container.offsetHeight;
+                const lyricHeight = container.querySelector(`.lyric:nth-child(${(lyricI+1)})`).offsetHeight;
+                const lyricTop = container.querySelector(`.lyric:nth-child(${(lyricI+1)})`).offsetTop;
+                const calcTop = (lyricTop - ((containerHeight/2) - (lyricHeight/2)))
                 
                 container.scrollTo({
                     top: calcTop,
@@ -489,12 +483,12 @@ class Lyrica {
                 })
             }
         }
-        const karaokeSlideSendType = function() {
-            const on = container.querySelector(`div.active`);
+        const advancedScrollSendType = function() {
+            const active = container.querySelector(`div.active`);
             let over;
-            over = on ? on.getAttribute("index") : null;
+            over = active ? active.getAttribute("index") : null;
             if (matched[1] == -1 || Number(over) !== matched[0]) {
-                slideSendType(true)
+                scrollSendType(true)
             }else {
                 for (let i=0; i<=matched[1]; i++) {
                     container.querySelector(`.active p:nth-child(${(i+1)})`).classList.add("active")
@@ -502,45 +496,47 @@ class Lyrica {
             }
         }
 
-        const matched = karaoke? this.karaokeMatchIndex(lyric[1]) : false;
-        if (karaoke) {
+        const matched = advanced ? this.advancedMatchIndex(lineIndex) : false;
+        if (advanced) {
             if (matched[1] == -1) {
                 this.lastPlayedLyric = this.gCurrentLyric;
             }
-            this.gCurrentLyric = [lyrics[matched[0]], times[lyric[1]], matched[0]];
+            this.gCurrentLyric = [lines[matched[0]], times[lineIndex], matched[0]];
         }else {
             this.lastPlayedLyric = this.gCurrentLyric;
-            this.gCurrentLyric = [lyrics[lyric[1]], times[lyric[1]], lyric[1]];
+            this.gCurrentLyric = [lines[lineIndex], times[lineIndex], lineIndex];
         }
 
         switch (mode) {
-            case "normal":
-                if (karaoke) {
-                    karaokeDefaultSendType();
+            case "solid":
+                if (advanced) {
+                    advancedDefaultSendType();
                 }else {
                     defaultSendType();
                 }
                 break;
-            case "slide":
-                if (karaoke) {
-                    karaokeSlideSendType();
+            case "scroll":
+                if (advanced) {
+                    advancedScrollSendType();
                 }else {
-                    slideSendType(false);
+                    scrollSendType(false);
                 }
                 break;
         }
     }
 
-    karaokeMatchIndex(index) {
-        const { times, lyricsCounts } = this;
-        let sumHldr=0, indexHldr=0;
-
-        while (sumHldr + lyricsCounts[indexHldr][0] <= index) {
-            sumHldr += lyricsCounts[indexHldr][0];
-            indexHldr += 1
+    advancedMatchIndex(index) {
+        const { times, linesCounts } = this
+        
+        let sum=0, resultIndex=0
+        
+        while (sum + linesCounts[resultIndex][0] <= index) {
+            sum += linesCounts[resultIndex][0]
+            resultIndex += 1
         }
         
-        return [ indexHldr, (index - sumHldr - 1) ]
+        return [ resultIndex, (index - sum - 1) ]
+        //     [line's index, word index]
     }
 
     searchLyric(time, exact, index) {
@@ -548,7 +544,7 @@ class Lyrica {
         
         function findLyric(time, index) {
             for (let i = 0; i < lyrics.length; i++) {
-                const indx = karaoke && actKaraoke ? lyricsCounts[i][1] : i;
+                const indx = karaoke && actKaraoke ? lyricsCounts[i][1] : i
                 if (times[indx] > (time)) {
                     const text = karaoke && actKaraoke ? String(lyrics[(i-1)].join('')) : lyrics[(i-1)]
                     return index ? [text, i-1] : [text]
