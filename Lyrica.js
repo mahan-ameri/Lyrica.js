@@ -46,11 +46,11 @@ class Lyrica {
         }
 
         const checkConds = function(consArray) {
-            consArray.forEach(cond => {
+            for (const cond of consArray) {
                 if (cond[0]) {
                     throw new Error(cond[1])
                 }
-            })
+            }
         }
         const getRequiredOptionsByType = function() {
             switch (options.type) {
@@ -72,11 +72,11 @@ class Lyrica {
 
         //  Validating options data types.
         for (let dtyp in optionsDataTypes) {
-            optionsDataTypes[dtyp].forEach(optn => {
+            for (const optn of optionsDataTypes[dtyp]) {
                 if (options[optn] !== undefined && typeof options[optn] !== dtyp) {
                     throw new Error(`${optn} has to be a/an ${dtyp}.`)
                 }
-            })
+            }
         }
 
         //  Handling Default Options.
@@ -146,7 +146,7 @@ class Lyrica {
                 
         const result = [];
         linesCounts.reduce((sum, count)=>{
-            result.push([count, sum])
+            result.push(sum)
             return sum+=count
         }, 0)
         
@@ -249,14 +249,6 @@ class Lyrica {
         }
 
         this.renderLyrics()
-        if (this.options.animations.autoScroll) {
-            let segap = this.container.querySelectorAll(".segap")
-            
-            segap.forEach(el => {
-                el.style.height = '55.5%'
-                el.style.width = "100%"
-            })
-        }
     }
     
     parseTimeAndText(line) {
@@ -328,7 +320,7 @@ class Lyrica {
                         litt.textContent = element;
                         p.appendChild(litt)
                     }
-                    p.setAttribute("data-time", (times[linesCounts[i][1]] - offset));
+                    p.setAttribute("data-time", (times[linesCounts[i]] - offset));
                 }else {
                     p.textContent = lines[i]
                     p.setAttribute("data-time", (times[i] - offset));
@@ -366,7 +358,7 @@ class Lyrica {
             let left = 0, right = times.length - 1, index = 0
 
             while (left <= right) {
-                const mid = Math.floor((left + right) / 2)
+                const mid = left + Math.floor((right - left) / 2)
 
                 if ((times[mid] - offset) <= currentTime) {
                     index = mid
@@ -461,9 +453,9 @@ class Lyrica {
             if (fromFindIndex) {
                 const children = container.children;
                 const passed = container.querySelectorAll('.passed');
-                passed.forEach(psd => {
+                for (const psd of passed) {
                     psd.classList.remove("passed");
-                })
+                }
                 for (let i=0; i < lyricI; i++) {
                     children[i].classList.add("passed")
                 }
@@ -525,18 +517,22 @@ class Lyrica {
         }
     }
 
-    advancedMatchIndex(index) {
-        const { times, linesCounts } = this
-        
-        let sum=0, resultIndex=0
-        
-        while (sum + linesCounts[resultIndex][0] <= index) {
-            sum += linesCounts[resultIndex][0]
-            resultIndex += 1
+    advancedMatchIndex(target) {
+        const { linesCounts } = this
+
+        let left = 0, right = linesCounts.length -1, index;
+        while (left <= right) {
+            const mid = left + Math.floor((right - left) / 2)
+
+            if (linesCounts[mid] <= target) {
+                index = mid
+                left = mid + 1
+            }else {
+                right = mid - 1
+            }
         }
-        
-        return [ resultIndex, (index - sum - 1) ]
-        //     [line's index, word index]
+        return [index, target - linesCounts[index] - 1]
+        //     [line's index, word's index (-1 = no word)]
     }
 
     searchLyric(time, exact, index) {
