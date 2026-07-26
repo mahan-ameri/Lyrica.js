@@ -250,7 +250,7 @@ class Lyrica {
 
         this.renderLyrics()
     }
-    
+
     parseTimeAndText(line) {
         const { options } = this
         const timeRegex = /\[(\d+):(\d{2})\.(\d{1,5})\]/g;
@@ -343,14 +343,14 @@ class Lyrica {
     }
 
     syncLyrics() {
-        const { options, times, lines, audio, offset } = this;
-        const animationType = options.animations.type;
-        const advancedState = options.isAdvanced && options.doAdvanced;
-        let currentIndex = [0, 0];
-        let interval;
+        const { options, times, lines, audio, offset } = this
+        const animationType = options.animations.type
+        const advancedState = options.isAdvanced && options.doAdvanced
+        let currentIndex = [0, 0]
+        let interval
 
         if (times[0] == 0) {
-            this.gCurrentLyric = [lines[0], times[0], 0];
+            this.gCurrentLyric = [lines[0], times[0], 0]
         }
 
         const findIndex = () => {
@@ -368,73 +368,74 @@ class Lyrica {
                 }
             }
 
-            this.sendLyric(animationType, index, "", advancedState, true);
+            this.sendLyric(animationType, index, "", advancedState, true)
 
-            currentIndex = [index, currentTime];
+            currentIndex = [index, currentTime]
         };
 
         const sync = () => {
-            clearInterval(interval);
-            findIndex();
+            clearInterval(interval)
+            findIndex()
             interval = setInterval(() => {
-                let currentTime = audio.currentTime * 1000;
+                let currentTime = audio.currentTime * 1000
                 if (Math.abs(currentTime - currentIndex[1]) < 70) {
                     if (times[currentIndex[0]] - offset <= currentTime) {
-                        this.sendLyric(animationType, currentIndex[0], currentTime, advancedState, false);
-                        currentIndex = [currentIndex[0] + 1, currentTime];
+                        this.sendLyric(animationType, currentIndex[0], currentTime, advancedState, false)
+                        currentIndex = [currentIndex[0] + 1, currentTime]
                     } else {
-                        currentIndex = [currentIndex[0], currentTime];
+                        currentIndex = [currentIndex[0], currentTime]
                     }
                 } else {
-                    findIndex();
+                    findIndex()
                 }
-            }, 10);
+            }, 10)
         };
 
         const stopSync = () => {
-            clearInterval(interval);
-            interval = null;
-        };
-
-        this.start = () => sync();
-        this.pause = () => stopSync();
-
-        if (options.autoStart) {
-            audio.addEventListener("play", sync);
-            audio.addEventListener("pause", stopSync);
+            clearInterval(interval)
+            interval = null
         }
 
-        audio.addEventListener("seeked", findIndex);
+        this.start = () => sync()
+        this.pause = () => stopSync()
+
+        if (options.autoStart) {
+            audio.addEventListener("play", sync)
+            audio.addEventListener("pause", stopSync)
+        }
+
+        audio.addEventListener("seeked", findIndex)
     }
 
     sendLyric(mode, lineIndex, currentTime, advanced, fromFindIndex) {
         const {lines, times, container, options} = this
-        const defaultSendType = () => {
-            const prevLyric = container.querySelector(`.lyric`);
-            if (prevLyric) { prevLyric.remove(); }
-            const element = document.createElement('p');
-            element.classList.add("lyric");
-            element.textContent = lines[lineIndex];
-            container.appendChild(element);
+        const solidSendType = () => {
+            const prevLyric = container.querySelector(`.lyric`)
+            if (prevLyric) { prevLyric.remove() }
+            const element = document.createElement('p')
+            element.classList.add("lyric")
+            element.textContent = lines[lineIndex]
+            container.appendChild(element)
 
             clearTimeout()
         }
         const advancedDefaultSendType = () => {
-            const on = container.querySelector(`.lyric`);
-            let over;
-            over = on ? on.getAttribute("index") : null;
+            const active = container.querySelector(`.lyric`)
+            let over
+
+            over = active ? active.getAttribute("index") : null
 
             if (matched[1] == -1 || Number(over) !== matched[0]) {
                 const prevLyric = container.querySelector(`.lyric`)
                 if (prevLyric) { prevLyric.remove() }
-                const element = document.createElement('div');
+                const element = document.createElement('div')
                 element.classList.add("lyric")
                 element.setAttribute("index", matched[0])
                 for (const elc of lines[matched[0]]) {
                     const litt = document.createElement("p")
                     litt.textContent = elc
                     element.appendChild(litt)
-                };
+                }
                 container.appendChild(element)
             }else {
                 for (let i=0; i<=matched[1]; i++) {
@@ -504,7 +505,7 @@ class Lyrica {
                 if (advanced) {
                     advancedDefaultSendType();
                 }else {
-                    defaultSendType();
+                    solidSendType();
                 }
                 break;
             case "scroll":
@@ -536,21 +537,22 @@ class Lyrica {
     }
 
     searchLyric(time, exact, index) {
-        const { times, lyrics, lyricsCounts, karaoke, actKaraoke } = this;
+        const { times, lines, linesCounts} = this;
+        const { isAdvanced, doAdvanced } = this.options;
         
         function findLyric(time, index) {
-            for (let i = 0; i < lyrics.length; i++) {
-                const indx = karaoke && actKaraoke ? lyricsCounts[i][1] : i
+            for (let i = 0; i < lines.length; i++) {
+                const indx = isAdvanced && doAdvanced ? linesCounts[i] : i
                 if (times[indx] > (time)) {
-                    const text = karaoke && actKaraoke ? String(lyrics[(i-1)].join('')) : lyrics[(i-1)]
+                    const text = isAdvanced && doAdvanced ? String(lines[(i-1)].join('')) : lines[(i-1)]
                     return index ? [text, i-1] : [text]
                 }
             }
         }
         function findExactLyric(time, index) {
             const i = times.indexOf(time);
-            const indx = karaoke && actKaraoke ? lyricsCounts[i][1] : i
-            const text = (i>0 ? lyrics[indx] : false)
+            const indx = isAdvanced && doAdvanced ? linesCounts[i] : i
+            const text = (i>0 ? lines[indx] : false)
             return index ? [text, indx] : [text]
         }
 
