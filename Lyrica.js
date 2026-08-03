@@ -201,7 +201,7 @@ class Lyrica {
                         const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
                         const lyricHeight = lyricEl.offsetHeight;
                         const lyricTop = lyricEl.offsetTop;
-                        const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
+                        const calcTop = (lyricTop - ((contaHeight) - (lyricHeight/2)));
 
                         this.container.scrollTo({
                             top: calcTop,
@@ -346,6 +346,7 @@ class Lyrica {
         const { options, times, lines, audio, offset } = this
         const animationType = options.animations.type
         const advancedState = options.isAdvanced && options.doAdvanced
+        const matched = advanced ? this.advancedMatchIndex(lineIndex) : false
         let currentIndex = [0, 0]
         let interval
 
@@ -489,7 +490,6 @@ class Lyrica {
             }
         }
 
-        const matched = advanced ? this.advancedMatchIndex(lineIndex) : false;
         if (advanced) {
             if (matched[1] == -1) {
                 this.lastPlayedLyric = this.gCurrentLyric;
@@ -537,8 +537,8 @@ class Lyrica {
     }
 
     searchLyric(time, exact, index) {
-        const { times, lines, linesCounts} = this;
-        const { isAdvanced, doAdvanced } = this.options;
+        const { times, lines, linesCounts} = this
+        const { isAdvanced, doAdvanced } = this.options
         
         function findLyric(time, index) {
             for (let i = 0; i < lines.length; i++) {
@@ -572,12 +572,13 @@ class Lyrica {
     }
 
     searchTime(lyric, index) {
-        const { times, lyrics, lyricsCounts, karaoke, actKaraoke } = this;
+        const { times, lines, linesCounts } = this
+        const { isAdvanced, doAdvanced } = this.options
         let matchedTimes = [];
         let matchedTimesIndexes = [];
-        for (let i=0; i<lyrics.length; i++) {
-            const index = karaoke && actKaraoke ? lyricsCounts[i][1] : i;
-            const wanted = karaoke && actKaraoke ? String(lyrics[i].join('')) : lyrics[i];
+        for (const i in lines) {
+            const index = isAdvanced && doAdvanced ? linesCounts[i] : i;
+            const wanted = isAdvanced && doAdvanced ? String(lines[i].join('')) : lines[i];
 
             if (wanted === lyric) {
                 matchedTimes.push(times[index]);
@@ -591,110 +592,107 @@ class Lyrica {
     getCurrent() {
         if (this.options.type === "sync") {
             return this.gCurrentLyric
-        } else {
-            console.warn("This method is only available for 'sync' type LRCs.");
+        }else {
+            return undefined
         }
     }
 
     next(dis) {
-        if (this.options.type === "sync") {
-            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke, offset } = this;
-            const currentIndex = this.gCurrentLyric?.[2] || 0;
-            const dist = dis || 1;
-            if (currentIndex < lyrics.length - dist) {
-                const index = karaoke && actKaraoke? lyricsCounts[currentIndex + dist][1] : currentIndex + dist;
-                audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
-                const wanted = karaoke && actKaraoke ? String(lyrics[currentIndex + dist].join('')) : lyrics[currentIndex + dist]
-                return [wanted, (times[index] - offset), (currentIndex + dist)];
-                // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex + 1], currentIndex + 1]);
-                // this.gCurrentLyric = [this.lyrics[currentIndex + 1], this.times[currentIndex + 1], currentIndex + 1];
-            }else {
-                return undefined
-            }
-        } else {
-            console.warn("This method is only available for 'sync' type LRCs.");
+        if (this.options.type !== "sync") return undefined
+
+        const { times, lines, linesCounts, audio, offset } = this
+        const { isAdvanced, doAdvanced } = this.options
+        const currentIndex = this.gCurrentLyric?.[2] || 0;
+        const dist = dis || 1;
+        if (currentIndex < lines.length - dist) {
+            const index = isAdvanced && doAdvanced? linesCounts[currentIndex + dist] : currentIndex + dist;
+            audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
+            const wanted = isAdvanced && doAdvanced ? String(lines[currentIndex + dist].join('')) : lines[currentIndex + dist]
+            return [wanted, (times[index] - offset), (currentIndex + dist)];
+        }else {
+            return undefined
         }
     }
 
     previous(dis) {
-        if (this.options.type === "sync") {
-            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke, offset } = this
-            const currentIndex = this.gCurrentLyric?.[2] || 0;
-            const dist = dis || 1;
-            if (currentIndex >= dist) {
-                const index = karaoke && actKaraoke? lyricsCounts[currentIndex - dist][1] : currentIndex - dist;
-                audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
-                const wanted = karaoke && actKaraoke ? String(lyrics[currentIndex + dist].join('')) : lyrics[currentIndex + dist]
-                return [wanted, (times[index] - offset), (currentIndex + dist)];
-                // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
-                // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
-            }else {
-                return undefined
-            }
-        } else {
-            console.warn("This method is only available for 'sync' type LRCs.");
+        if (this.options.type !== "sync") return undefined
+
+        const { times, lines, linesCounts, audio, offset } = this
+        const { isAdvanced, doAdvanced } = this.options
+        const currentIndex = this.gCurrentLyric?.[2] || 0;
+        const dist = dis || 1;
+        if (currentIndex >= dist) {
+            const index = isAdvanced && doAdvanced? linesCounts[currentIndex - dist] : currentIndex - dist;
+            audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
+            const wanted = isAdvanced && doAdvanced ? String(lines[currentIndex - dist].join('')) : lines[currentIndex - dist]
+            return [wanted, (times[index] - offset), (currentIndex - dist)];
+            // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
+            // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
+        }else {
+            return undefined
         }
     }
 
     last() {
-        if (this.options.type === "sync") {
-            if (this.lastPlayedLyric === undefined || this.lastPlayedLyric === null) {
-                return undefined;
-            }else {
-                this.audio.currentTime = (this.lastPlayedLyric[1] / 1000) + 0.2;
-                return this.lastPlayedLyric;
-            }
+        if (this.options.type !== "sync") return undefined
+
+        if (this.lastPlayedLyric === undefined || this.lastPlayedLyric === null) {
+            return undefined;
         }else {
-            console.warn("This method is only available for 'sync' type LRCs.");
+            this.audio.currentTime = (this.lastPlayedLyric[1] / 1000) + 0.2;
+            return this.lastPlayedLyric;
         }
     }
 
-    goTo(place) {
-        if (this.options.type === "sync") {
-            const { times, lyrics, lyricsCounts, audio, karaoke, actKaraoke, offset} = this
-            if (place.time) {
-                if (place.time !== '') {
-                    const lyric = this.searchLyric(place.time, false, true);
-                    const index = karaoke && actKaraoke ? lyricsCounts[lyric[1]][1] : lyric[1];
-                    audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
-                    return [lyric[0], (times[index] - offset), lyric[1]]
-                }else {
-                    return undefined
-                }
-            }else if (place.lyric) {
-                let lyricText, lyricIndex;
-                if (Array.isArray(place.lyric)) {
-                    lyricText = String(place.lyric[0]);
-                    lyricIndex = place.lyric[1] ?? 0;
-                } else {
-                    lyricText = String(place.lyric);
-                    lyricIndex = 0;
-                }
-                const lyricsIndexes = this.searchTime(lyricText, true);
-                if (lyricsIndexes[1].length >= 0 && lyricsIndexes[1][lyricIndex] !== undefined) {
-                    audio.currentTime = ((times[lyricsIndexes[1][lyricIndex]] - offset) / 1000) + 0.2;
-                    return [lyricText, (times[lyricsIndexes[1][lyricIndex]] - offset), this.karaokeMatchIndex(lyricsIndexes[1][lyricIndex])[0]];
-                }else {
-                    return undefined;
-                }
-                
-            }else if (place.index) {
-                if (place.index !== '' && !isNaN(place.index)) {
-                    const index = karaoke && actKaraoke ? lyricsCounts[Number(place.index)][1] : Number(place.index)
-                    audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
-                    const wanted = karaoke && actKaraoke ? String(lyrics[place.index].join('')) : lyrics[place.index]
-                    return [wanted, (times[index] - offset), place.index]
-                }else {
-                    return undefined
-                }
-            }
-        }else {
-            console.warn("This method is only available for 'sync' type LRCs.");
+    goTo(placeObj) {
+        if (this.options.type !== "sync" || !placeObj || typeof placeObj !== "object") return undefined
+
+        const { times, lines, linesCounts, audio, offset } = this
+        const { isAdvanced, doAdvanced } = this.options
+
+        if (placeObj.time !== undefined && placeObj.time !== "") {
+            const lyric = this.searchLyric(placeObj.time, false, true);
+            const index = isAdvanced && doAdvanced ? linesCounts[lyric[1]] : lyric[1];
+            audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
+
+            return [lyric[0], (times[index] - offset), lyric[1]]
         }
+
+        if (placeObj.lyric !== undefined && placeObj.lyric !== "") {
+            let lyricText, lyricIndex;
+
+            if (Array.isArray(placeObj.lyric)) {
+                lyricText = String(placeObj.lyric[0]);
+                lyricIndex = placeObj.lyric[1] ?? 0;
+            } else {
+                lyricText = String(placeObj.lyric);
+                lyricIndex = 0;
+            }
+
+            const linesIndexes = this.searchTime(lyricText, true)
+            if (linesIndexes[1].length >= 0 && linesIndexes[1][lyricIndex] !== undefined) {
+                audio.currentTime = ((times[linesIndexes[1][lyricIndex]] - offset) / 1000) + 0.2
+                return [lyricText, (times[linesIndexes[1][lyricIndex]] - offset), this.advancedMatchIndex(linesIndexes[1][lyricIndex])[0]]
+            }
+
+            return undefined
+        }
+
+        if (placeObj.index !== undefined && placeObj.index !== "") {
+            const numericIndex = Number(placeObj.index)
+            if (isNaN(numericIndex)) return undefined
+
+            const indx = isAdvanced && doAdvanced ? linesCounts[numericIndex] : numericIndex
+            audio.currentTime = ((times[indx] - offset) / 1000) + 0.2;
+            const wanted = isAdvanced && doAdvanced ? String(lines[numericIndex].join('')) : lines[numericIndex]
+            return [wanted, (times[indx] - offset), numericIndex]
+        }
+
+        return undefined
     }
 
     getData() {
-        return {"lyrics": this.lyrics, "lyricsCounter": this.lyricsCounts, "times": this.times, "metadata": this.metadata}
+        return {"lines": this.lines, "linesCounts": this.linesCounts, "times": this.times, "metadata": this.metadata}
     }
 }
 
