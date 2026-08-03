@@ -1,3 +1,5 @@
+'use strict';
+
 class Lyrica {
     constructor(lyrics, options) {
         this.lyricsText = lyrics;
@@ -691,5 +693,5 @@ class Lyrica {
     }
 }
 
-export { Lyrica as default };
-//# sourceMappingURL=Lyrica.esm.mjs.map
+module.exports = Lyrica;
+//# sourceMappingURL=Lyrica.cjs.map

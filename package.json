@@ -15,7 +15,7 @@
   "exports": {
     ".": {
       "import": "./dist/Lyrica.esm.mjs",
-      "require": "./dist/Lyrica.umd.cjs"
+      "require": "./dist/Lyrica.cjs"
     }
   },
   "files": [
@@ -24,7 +24,8 @@
     "LICENSE"
   ],
   "scripts": {
-    "build": "rollup -c"
+    "build": "rollup -c",
+    "build:prod": "cross-env NODE_ENV=production rollup -c"
   },
   "author": "mahan-ameri <mahanameri142@gmail.com>",
   "license": "MIT",
@@ -33,6 +34,8 @@
     "url": "git+https://github.com/mahan-ameri/lyrica.js.git"
   },
   "devDependencies": {
+    "@rollup/plugin-terser": "^1.0.0",
+    "cross-env": "^10.1.0",
     "rollup": "^4.46.2"
   },
   "bugs": {
