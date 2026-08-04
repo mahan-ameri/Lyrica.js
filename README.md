@@ -1,163 +1,159 @@
 <h4 align="center">
   <a href="https://mahan-ameri.github.io/Lyrica.js/">Demo</a> |
   <a href="https://www.npmjs.com/package/lyrica">npm</a> |
-  <a href="#-basic-usage">Documention</a>
+  <a href="#basic-usage">Documentation</a>
 </h4>
 
 # Lyrica.js
 
-Lyrica.js is an open-source JavaScript library for working with `.lrc` lyric files.
-It provides tools for parsing lyrics, synchronizing them with audio, rendering them in the browser, and extracting structured lyric data.
+Lyrica.js is an open-source JavaScript library for working with `.lrc` lyric text.
+It can parse lyrics, synchronize them with audio, render them in the browser, and extract structured lyric data.
 
-Lyrica.js is under development, and some APIs may change between releases as the architecture continues to improve.
+The API is still evolving, so some details may continue to change.
+This README matches the current `Lyrica.js` source in the repository.
 
 ![preview](https://github.com/user-attachments/assets/3f9ba634-4e7e-432e-9863-c7f9bd199531)
+
 ## Features
-* Core Features:
-    * Sync - Render lyrics and synchronize them in real time with an HTML `<audio>` element.
-
-    * Print - Render lyrics from `.lrc` files without syncing.
-
-    * Extract - Parse .lrc files to get structured lyric, timing, and metadata data.
-
-* Rendering - Two styles: `normal` (static) and `slide`. Optional auto-scroll, wheel/touch scroll handling, and click-to-seek.
-
-* Playback Control - Start, pause, next, previous, go to a specific lyric/time, retrieve current lyric info in real-time.
-
-* Search - Find a lyric by time or find the timestamp(s) for a given lyric.
+* Sync: render lyrics and synchronize them with an HTML `<audio>` element.
+* Print: render lyrics from `.lrc` text without syncing playback.
+* Parse: extract structured lyric, timing, and metadata data.
+* Rendering: supports `solid` and `scroll` modes, with optional auto-scroll, wheel/touch scroll handling, and click-to-seek.
+* Playback control: start, pause, move to the next or previous lyric, jump to a lyric or time, and read the current lyric state.
+* Search: find a lyric by time or locate one or more timestamps for a given lyric.
 
 ## Installation
 #### via npm
 ```console
 npm i lyrica
 ```
+
 #### Manual
 
- Download `Lyrica.umd.js` from `dist` folder and include it in your project:
+Download `Lyrica.umd.js` from the latest release in the **Releases** section [here](https://github.com/mahan-ameri/Lyrica.js/releases).
 ```html
 <script src="./Lyrica.umd.js"></script>
 ```
 
-#  Quick Start
+# Quick Start
 HTML:
 ```html
 <audio id="my-audio" src="song.mp3" controls></audio>
 <div class="lyrica-container"></div>
 ```
-JavaScript
+
+JavaScript:
 ```javascript
-const example = new Lyrica("./example.lrc", {
+const response = await fetch("./example.lrc");
+const rawLyrics = await response.text();
+//  Or any other way to get the raw text
+
+const player = document.querySelector("#my-audio");
+const lyricsBox = document.querySelector(".lyrica-container");
+
+const example = new Lyrica(rawLyrics, {
     type: "sync",
-    audio_selector: "#my-audio",
-    container_selector: ".lyrica-container",
+    audioElement: player,
+    containerElement: lyricsBox,
     animations: {
-        animation_type: "slide",
-        auto_scroll: true
+        type: "scroll",
+        autoScroll: true
     }
 });
 ```
 
 # Basic Usage
 ```javascript
-const example = new Lyrica(Path, Options)
+const example = new Lyrica(lyrics, options)
 ```
-## Path
-The first parameter is a string that can be either a `.lrc` file path or raw `.lrc` text. (required)
+
+## Input
+The first parameter is raw `.lrc` text.
+If you want to use a file, load the file yourself first and pass its contents into the constructor.
 
 ## Options
-The second parameter is an options object that configures the class.(required)
+The second parameter is an options object that configures the class.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| type | string | - | "sync", "print, "extract" (required) |
-| isRaw | boolean | false | Pass raw `.lrc` text instead of file path |
-| offset | number | inset `.lrc` offset / 0 | Adjust lyric timing in millisecond |
-| audio_selector | string | - | CSS selector for `<audio>` element (required for "sync") |
-| container_selector | string | - | CSS selector for lyrics container (required for "sync")|
-| animations | object | - | Animation settings (see below) |
-| isKaraoke | boolean | false | Enable advanced timing parse |
-| actKaraoke | boolean | isKaraoke's value | Whether to actively display karaoke segment |
+| type | string | `"parse"` | `"sync"`, `"print"`, or `"parse"` |
+| audioElement | HTMLAudioElement | - | The `<audio>` element used for sync mode; required for `sync` |
+| containerElement | HTMLElement | - | The lyrics container element; required for `print` and `sync` |
+| isAdvanced | boolean | false | Enable advanced timing parsing for word-level lyrics |
+| doAdvanced | boolean | `isAdvanced` value | Render advanced timing segments as separate lyric parts |
+| offset | number | inset `.lrc` offset / `0` | Adjust lyric timing in milliseconds |
+| autoStart | boolean | true | Automatically start syncing when the audio plays |
+| animations | object | - | Animation settings used by sync rendering |
 
 ### Animations
 
 | Key | Type | Default | Description |
 |-----|------|---------|-------------|
-| animation_type | string | "normal" | "normal" or "slide" |  
-| auto_scroll | boolean | false | Automatically scroll to the active lyric (only in "slide") |
-| wheel_scroll | boolean | true | Enable mouse-wheel scrolling within sync scroll constraints (only in "slide") |
-| touch_scroll | boolean | true | Enable touch scrolling within sync scroll constraints (only in "slide") |
-| change_onclick | boolean | true | Clicking a lyric seeks audio (only in "slide") |
-| keyframe_id | string | "LyricaLyricIn" | The name of a CSS keyframe animation that will be applied only when a lyric becomes active in "normal" mode. |
-| animation_parameters | string | 'ease-out 0.2s' | Additional parameters passed to the animation call |
+| type | string | `"solid"` | `solid` or `scroll` |
+| autoScroll | boolean | true | Automatically scroll to the active lyric |
+| wheelScroll | boolean | true | ... |
+| touchScroll | boolean | true | ... |
+| changeOnclick | boolean | true | Clicking a lyric seeks the audio to that lyric |
 
 ### Options Object Structure
 
 ```javascript
 {
-  type: "sync" | "print" | "extract", // Required
-  audio_selector: "#audio", // Required for "sync" type
-  container_selector: "#lyrics", // Required for "sync" and "print" types
-  isKaraoke: false, // Optional
-  actKaraoke: false, // Optional
-  isRaw: false, // Optional
+  type: "sync" | "print" | "parse", // Required
+  audioElement: htmlAudio, // Required for "sync"
+  containerElement: lyricsBox, // Required for "print" and "sync"
+  isAdvanced: false, // Optional
+  doAdvanced: false, // Optional
   autoStart: true, // Optional
   offset: 0, // Optional
   animations: { // Optional
-    animation_type: "normal" | "slide",
-    animation_parameters: "ease-out 0.2s",
-    keyframe_id: "LyricaLyricIn",
-    auto_scroll: true,
-    wheel_scroll: true,
-    touch_scroll: true
+    type: "solid" | "scroll",
+    autoScroll: true,
+    wheelScroll: true,
+    touchScroll: true,
+    changeOnclick: true
   }
 }
-``` 
+```
+
 ---------
 ## Methods
-
-### Constructor and Static Methods
-
-| Method | Parameters | Description | Example |
-|--------|------------|-------------|----------|
-| `constructor(path, options)` | `path`: String<br>`options`: Object | Initializes a new Lyrica instance with the given LRC file path and options | `new Lyrica("lyrics.lrc", {type: "sync"})` |
-| `static load(path, options)` | `path`: String<br>`options`: Object | Asynchronously creates and initializes a Lyrica instance | `await Lyrica.load("lyrics.lrc", {type: "sync"})` |
-
 ### Core Methods
 
 | Method | Parameters | Return Value | Description | Example |
 |--------|------------|--------------|-------------|----------|
-| `getData()` | None | Object | Returns all lyrics data including times, lyrics text, and metadata | `example.getData()` |
-| `getCurrent()` | None | Array | Returns current lyric info `[text, time, index]`. Only works in "sync" mode | `example.getCurrent()` |
-| `start()` | None | None | Starts syncing lyrics with audio. Only works in "sync" mode | `example.start()` |
-| `pause()` | None | None | Pauses lyric syncing. Only works in "sync" mode | `example.pause()` |
+| `getData()` | None | Object | Returns the parsed lyric data: `lines`, `linesCounts`, `times`, and `metadata` | `example.getData()` |
+| `getCurrent()` | None | Array | Returns the current lyric info as `[text, time, index]`. Only works in `sync` mode | `example.getCurrent()` |
+| `start()` | None | None | Starts syncing lyrics with audio. Only works in `sync` mode | `example.start()` |
+| `pause()` | None | None | Pauses lyric syncing. Only works in `sync` mode | `example.pause()` |
 
 ### Navigation Methods
 
 | Method | Parameters | Return Value | Description | Example |
 |--------|------------|--------------|-------------|----------|
-| `next(distance)` | `distance`: Number (optional) | Array/undefined | Jumps to next lyric. Returns `[text, time, index]` or `undefined` | `example.next()` or `example.next(2)` |
-| `previous(distance)` | `distance`: Number (optional) | Array/undefined | Jumps to previous lyric. Returns `[text, time, index]` or `undefined` | `example.previous()` or `example.previous(2)` |
-| `last()` | None | Array/undefined | Returns to last played lyric. Returns `[text, time, index]` or `undefined` | `example.last()` |
+| `next(distance)` | `distance`: Number (optional) | Array/undefined | Jumps to the next lyric. Returns `[text, time, index]` or `undefined` | `example.next()` or `example.next(2)` |
+| `previous(distance)` | `distance`: Number (optional) | Array/undefined | Jumps to the previous lyric. Returns `[text, time, index]` or `undefined` | `example.previous()` or `example.previous(2)` |
+| `last()` | None | Array/undefined | Returns to the last played lyric. Returns `[text, time, index]` or `undefined` | `example.last()` |
+| `goTo(place)` | `place`: Object | Array/undefined | Jumps to a specific position by `time`, `lyric` text, or `index` | `example.goTo({time: "1:30.00"})` |
 
 ### Search Methods
 
 | Method | Parameters | Return Value | Description | Example |
 |--------|------------|--------------|-------------|----------|
-| `searchLyric(time, exact, index)` | `time`: String/Number<br>`exact`: Boolean<br>`index`: Boolean | Array | Finds lyrics by timestamp | `example.searchLyric("1:30.00", false, true)` |
-| `searchTime(lyric, index)` | `lyric`: String<br>`index`: Boolean | Array | Finds timestamp(s) for given lyric text | `example.searchTime("Hello", true)` |
-| `goTo(place)` | `place`: Object | Array/undefined | Jumps to specific position by time, lyric text, or index | `example.goTo({time: "1:30.00"})` |
+| `searchLyric(time, exact, index)` | `time`: String/Number<br>`exact`: Boolean<br>`index`: Boolean | Array | Finds the lyric that matches or precedes a timestamp | `example.searchLyric("1:30.00", false, true)` |
+| `searchTime(lyric, index)` | `lyric`: String<br>`index`: Boolean | Array | Finds the timestamp(s) for a given lyric text | `example.searchTime("Hello", true)` |
 
---------
+---------
 ## CSS Classes
-* Each lyric line is rendered inside an element with the class `.lyric` (applies to both normal and slide modes).
+* Each lyric line is rendered inside an element with the class `.lyric` (applies to both solid and scroll modes).
 * Active state:
-    * In slide mode: the current line or current word (in karaoke) receives the `.active` class.
-    * In normal mode: only the current word receives the `.active` class.
-* Passed lines: any line that has already been played is marked with the `.passed` class. (only in "slide")
+    * In scroll mode: the current line or current word (in advanced) receives the `.active` class.
+    * In solid mode: only the current word receives the `.active` class.
+* Passed lines: any line that has already been played is marked with the `.passed` class. (only in "scroll")
 * Tag types:
-    * By default (no karaoke), each line is a `<p>` element in both normal and slide modes.
-    * When `isKaraoke: true` and `actKaraoke: true`, each word inside the line is wrapped in a `<span>` for fine-grained karaoke highlighting.
-* In `karaoke + actKaraoke`, the line itself still has the `.lyric` class, but instead of plain text, its words are split into `<span>`s so timing can highlight each word individually.
+    * By default (no advanced), each line is a `<p>` element in both solid and scroll modes.
+    * When `isAdvanced: true` and `doAdvanced: true`, each word inside the line is wrapped in a `<p>` for fine-grained advanced highlighting.
+* In `advanced + doAdvanced`, the line itself still has the `.lyric` class, but instead of plain text, its words are split into `<p>`s so timing can highlight each word individually.
 
 ---------
 # License

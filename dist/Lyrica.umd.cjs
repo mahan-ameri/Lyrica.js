@@ -203,7 +203,7 @@
                             const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
                             const lyricHeight = lyricEl.offsetHeight;
                             const lyricTop = lyricEl.offsetTop;
-                            const calcTop = (lyricTop - ((contaHeight) - (lyricHeight/2)));
+                            const calcTop = (lyricTop - ((contaHeight/2) - (lyricHeight/2)));
 
                             this.container.scrollTo({
                                 top: calcTop,
@@ -229,7 +229,7 @@
                             const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
                             const lyricHeight = lyricEl.offsetHeight;
                             const lyricTop = lyricEl.offsetTop;
-                            const calcTop = (lyricTop - ((contaHeight/2.19) - (lyricHeight/2)));
+                            const calcTop = (lyricTop - ((contaHeight/2) - (lyricHeight/2)));
 
                             this.container.scrollTo({
                                 top: calcTop,
@@ -348,7 +348,6 @@
             const { options, times, lines, audio, offset } = this;
             const animationType = options.animations.type;
             const advancedState = options.isAdvanced && options.doAdvanced;
-            advanced ? this.advancedMatchIndex(lineIndex) : false;
             let currentIndex = [0, 0];
             let interval;
 
@@ -412,6 +411,7 @@
 
         sendLyric(mode, lineIndex, currentTime, advanced, fromFindIndex) {
             const {lines, times, container, options} = this;
+            const matched = advanced ? this.advancedMatchIndex(lineIndex) : false;
             const solidSendType = () => {
                 const prevLyric = container.querySelector(`.lyric`);
                 if (prevLyric) { prevLyric.remove(); }
@@ -627,8 +627,6 @@
                 audio.currentTime = ((times[index] - offset) / 1000) + 0.2;
                 const wanted = isAdvanced && doAdvanced ? String(lines[currentIndex - dist].join('')) : lines[currentIndex - dist];
                 return [wanted, (times[index] - offset), (currentIndex - dist)];
-                // this.sendLyric(this.options.animations.animation_type, [this.lyrics[currentIndex - 1], currentIndex - 1]);
-                // this.gCurrentLyric = [this.lyrics[currentIndex - 1], this.times[currentIndex - 1], currentIndex - 1];
             }else {
                 return undefined
             }
