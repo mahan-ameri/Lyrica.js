@@ -346,8 +346,8 @@ class Lyrica {
         const { options, times, lines, audio, offset } = this
         const animationType = options.animations.type
         const advancedState = options.isAdvanced && options.doAdvanced
-        let currentIndex = [0, 0]
-        let interval
+        let memory = {currentIndex: 0, lastTime: 0}
+        let nextLineTimeout;
 
         if (times[0] == 0) {
             this.gCurrentLyric = [lines[0], times[0], 0]
@@ -371,29 +371,22 @@ class Lyrica {
             this.sendLyric(animationType, index, "", advancedState, true)
 
             currentIndex = [index, currentTime]
-        };
+        };  
 
         const sync = () => {
-            clearInterval(interval)
-            findIndex()
-            interval = setInterval(() => {
-                let currentTime = audio.currentTime * 1000
-                if (Math.abs(currentTime - currentIndex[1]) < 70) {
-                    if (times[currentIndex[0]] - offset <= currentTime) {
-                        this.sendLyric(animationType, currentIndex[0], currentTime, advancedState, false)
-                        currentIndex = [currentIndex[0] + 1, currentTime]
-                    } else {
-                        currentIndex = [currentIndex[0], currentTime]
-                    }
-                } else {
-                    findIndex()
-                }
-            }, 10)
-        };
+            if (memory.currentIndex+1 >= times.length) return
+            const delayTime = times[memory.currentIndex] + offset - memory.lastTime
+            nextLineTimeout = setTimeout(() => {
+                this.sendLyric(animationType, memory.currentIndex, false, advancedState, false)
+                memory.lastTime = times[memory.currentIndex]
+                memory.currentIndex += 1
+                sync()
+            }, delayTime)
+        }
 
         const stopSync = () => {
-            clearInterval(interval)
-            interval = null
+            clearTimeout(nextLineTimeout)
+            nextLineTimeout = null
         }
 
         this.start = () => sync()
