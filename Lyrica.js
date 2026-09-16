@@ -346,15 +346,16 @@ class Lyrica {
         const { options, times, lines, audio, offset } = this
         const animationType = options.animations.type
         const advancedState = options.isAdvanced && options.doAdvanced
-        let memory = {currentIndex: 0, lastTime: 0}
-        let nextLineTimeout;
+        let currentIndex = 0
+        let lastTime = 0
+        let nextLineTimeout
 
         if (times[0] == 0) {
             this.gCurrentLyric = [lines[0], times[0], 0]
         }
 
-        const findIndex = () => {
-            const currentTime = audio.currentTime * 1000;
+        const findIndex = (send = true) => {
+            const currentTime = audio.currentTime * 1000
             let left = 0, right = times.length - 1, index = 0
 
             while (left <= right) {
@@ -368,18 +369,18 @@ class Lyrica {
                 }
             }
 
-            this.sendLyric(animationType, index, "", advancedState, true)
+            if (send) this.sendLyric(animationType, index, "", advancedState, true)
 
-            currentIndex = [index, currentTime]
-        };  
+            currentIndex = index +1
+            lastTime = currentTime
+        }
 
         const sync = () => {
-            if (memory.currentIndex+1 >= times.length) return
-            const delayTime = times[memory.currentIndex] + offset - memory.lastTime
+            if (currentIndex+1 >= times.length) return
+            const delayTime = times[currentIndex] + offset - lastTime
             nextLineTimeout = setTimeout(() => {
-                this.sendLyric(animationType, memory.currentIndex, false, advancedState, false)
-                memory.lastTime = times[memory.currentIndex]
-                memory.currentIndex += 1
+                this.sendLyric(animationType, currentIndex, false, advancedState, false)
+                findIndex(false)
                 sync()
             }, delayTime)
         }
@@ -388,12 +389,16 @@ class Lyrica {
             clearTimeout(nextLineTimeout)
             nextLineTimeout = null
         }
+        const startSync = () => {
+            findIndex()
+            sync()
+        }
 
-        this.start = () => sync()
+        this.start = () => startSync()
         this.pause = () => stopSync()
 
         if (options.autoStart) {
-            audio.addEventListener("play", sync)
+            audio.addEventListener("play", startSync)
             audio.addEventListener("pause", stopSync)
         }
 
