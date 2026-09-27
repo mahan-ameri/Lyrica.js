@@ -349,6 +349,7 @@ class Lyrica {
         let currentIndex = 0
         let lastTime = 0
         let nextLineTimeout
+        let audioRate
 
         if (times[0] == 0) {
             this.gCurrentLyric = [lines[0], times[0], 0]
@@ -369,7 +370,7 @@ class Lyrica {
                 }
             }
 
-            if (send) this.sendLyric(animationType, index, "", advancedState, true)
+            if (send) this.sendLyric(animationType, index, advancedState, true)
 
             currentIndex = index +1
             lastTime = currentTime
@@ -377,9 +378,11 @@ class Lyrica {
 
         const sync = () => {
             if (currentIndex+1 >= times.length) return
-            const delayTime = times[currentIndex] + offset - lastTime
+            console.log((times[currentIndex] + offset - lastTime) / audio.playbackRate);
+            
+            const delayTime = (times[currentIndex] + offset - lastTime) / audio.playbackRate
             nextLineTimeout = setTimeout(() => {
-                this.sendLyric(animationType, currentIndex, false, advancedState, false)
+                this.sendLyric(animationType, currentIndex, advancedState, false)
                 findIndex(false)
                 sync()
             }, delayTime)
@@ -403,9 +406,10 @@ class Lyrica {
         }
 
         audio.addEventListener("seeked", findIndex)
+        audio.addEventListener("ratechange", () => { })
     }
 
-    sendLyric(mode, lineIndex, currentTime, advanced, fromFindIndex) {
+    sendLyric(mode, lineIndex, advanced, fromFindIndex) {
         const {lines, times, container, options} = this
         const matched = advanced ? this.advancedMatchIndex(lineIndex) : false
         const solidSendType = () => {
