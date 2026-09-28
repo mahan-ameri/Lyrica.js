@@ -346,7 +346,8 @@ class Lyrica {
         const { options, times, lines, audio, offset } = this
         const animationType = options.animations.type
         const advancedState = options.isAdvanced && options.doAdvanced
-        let currentIndex = [0, 0]
+        let currentIndex = 0
+        let lastCurrentTime = 0
         let interval
 
         if (times[0] == 0) {
@@ -368,9 +369,10 @@ class Lyrica {
                 }
             }
 
-            this.sendLyric(animationType, index, "", advancedState, true)
+            this.sendLyric(animationType, index, advancedState, true)
 
-            currentIndex = [index, currentTime]
+            currentIndex = index
+            lastCurrentTime = currentTime
         };
 
         const sync = () => {
@@ -378,12 +380,13 @@ class Lyrica {
             findIndex()
             interval = setInterval(() => {
                 let currentTime = audio.currentTime * 1000
-                if (Math.abs(currentTime - currentIndex[1]) < 70) {
-                    if (times[currentIndex[0]] - offset <= currentTime) {
-                        this.sendLyric(animationType, currentIndex[0], currentTime, advancedState, false)
-                        currentIndex = [currentIndex[0] + 1, currentTime]
+                if (Math.abs(currentTime - lastCurrentTime) < 70) {
+                    if (times[currentIndex] - offset <= currentTime) {
+                        this.sendLyric(animationType, currentIndex, advancedState, false)
+                        currentIndex += 1
+                        lastCurrentTime = currentTime
                     } else {
-                        currentIndex = [currentIndex[0], currentTime]
+                        lastCurrentTime = currentTime
                     }
                 } else {
                     findIndex()
@@ -407,7 +410,7 @@ class Lyrica {
         audio.addEventListener("seeked", findIndex)
     }
 
-    sendLyric(mode, lineIndex, currentTime, advanced, fromFindIndex) {
+    sendLyric(mode, lineIndex, advanced, fromFindIndex) {
         const {lines, times, container, options} = this
         const matched = advanced ? this.advancedMatchIndex(lineIndex) : false
         const solidSendType = () => {
