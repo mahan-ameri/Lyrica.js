@@ -318,7 +318,7 @@ div:hover::-webkit-scrollbar-thumb {
     display: block;
     text-align: center;
     font-size: 2.1vh;
-    font-family: monospace;
+    font-family: serif;
     padding: 1vh 2vh;
     margin-top: 0.6vh;
     margin-bottom: 0.6vh;
@@ -338,7 +338,7 @@ div:hover::-webkit-scrollbar-thumb {
     top: 50%;
     transform: translateY(-50%);
     font-size: 2.6vh;
-    font-family: monospace;
+    font-family: serif;
     padding: 1vh 1vh;
     cursor: pointer;
     border: 2px solid #add838;
@@ -687,7 +687,7 @@ section .audio {
     font-size: 1.7vh;
     cursor: pointer;
     white-space: pre;
-    font-family: monospace;
+    font-family: Arial, Helvetica, sans-serif;
     transition: 0.1s;
 }
 .audio .lyrica-container .lyric.active {
