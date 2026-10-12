@@ -1,7 +1,8 @@
 class Lyrica {
-    constructor(lyrics, options) {
+    constructor(lyrics, options, callback) {
         this.lyricsText = lyrics;
         this.options = options;
+        this.callbackFunction = callback;
 
         this.times = [];
         this.lines = [];
@@ -503,6 +504,7 @@ class Lyrica {
             this.gCurrentLyric = [lines[lineIndex], times[lineIndex], lineIndex];
         }
 
+        this.callbackFunction?.()
         switch (mode) {
             case "solid":
                 if (advanced) {
