@@ -34,7 +34,8 @@ class Lyrica {
                 wheelScroll: true,
                 touchScroll: true,
                 changeOnclick: true,
-                activeLineAlignment: "center"
+                activeLineAlignment: "center",
+                positionOffset: 0
             }
         }
         const optionsDataTypes = {
@@ -45,7 +46,8 @@ class Lyrica {
         }
         const animationsDataTypes = {
             boolean: ["autoScroll", "wheelScroll", "touchScroll"],
-            string: ["type", "activeLineAlignment"]
+            string: ["type", "activeLineAlignment"],
+            number: ["positionOffset"]
         }
 
         const checkConds = function(consArray) {
@@ -74,11 +76,18 @@ class Lyrica {
         checkConds(basicConds)
 
         //  Validating options data types.
-        for (let dtyp in optionsDataTypes) {
+        for (const dtyp in optionsDataTypes) {
             for (const optn of optionsDataTypes[dtyp]) {
                 if (options[optn] !== undefined && typeof options[optn] !== dtyp) {
                     throw new Error(`${optn} has to be a/an ${dtyp}.`)
                 }
+            }
+        }
+
+        //  Validating animations options (only numbers)
+        for (const animOptn of animationsDataTypes["number"]) {
+            if (options.animations[animOptn] !== undefined && typeof options.animations[animOptn] !== "number") {
+                    throw new Error(`${animOptn} has to be a number in pixels.`)
             }
         }
 
@@ -189,17 +198,18 @@ class Lyrica {
         const lyricEl = this.container.querySelector(`.lyric:nth-child(${(lyricIndex + 1)})`);
         const lyricHeight = lyricEl.offsetHeight;
         const lyricTop = lyricEl.offsetTop;
+        const offset = this.options.animations.positionOffset
 
         let scrollLength;
         switch (this.options.animations.activeLineAlignment) {
             case 'center':
-                scrollLength = (lyricTop - ((containerHeight/2) - (lyricHeight/2)))
+                scrollLength = (lyricTop - ((containerHeight/2) - (lyricHeight/2))) + offset
                 break;
             case 'top':
-                scrollLength = (lyricTop - (lyricHeight/2))
+                scrollLength = (lyricTop - (lyricHeight/2)) + offset
                 break;
             default:
-                scrollLength = (lyricTop - ((containerHeight) - (lyricHeight)))
+                scrollLength = (lyricTop - ((containerHeight) - (lyricHeight))) + offset
                 break;
         }
 
