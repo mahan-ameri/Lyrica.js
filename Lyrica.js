@@ -86,7 +86,7 @@ class Lyrica {
 
         //  Validating animations options (only numbers)
         for (const animOptn of animationsDataTypes["number"]) {
-            if (options.animations[animOptn] !== undefined && typeof options.animations[animOptn] !== "number") {
+            if (options.animations !== undefined && options.animations[animOptn] !== undefined && typeof options.animations[animOptn] !== "number") {
                     throw new Error(`${animOptn} has to be a number in pixels.`)
             }
         }
