@@ -1,6 +1,6 @@
 {
   "name": "lyrica",
-  "version": "1.0.7",
+  "version": "1.0.8",
   "description": "Lyrica.js is a lightweight and optimized JavaScript library for parsing, synchronizing, and extracting data from standard and advanced `.lrc` lyric files.",
   "main": "dist/Lyrica.umd.js",
   "module": "dist/Lyrica.esm.mjs",

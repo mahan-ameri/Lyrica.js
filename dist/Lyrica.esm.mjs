@@ -1,7 +1,8 @@
 class Lyrica {
-    constructor(lyrics, options) {
+    constructor(lyrics, options, callback) {
         this.lyricsText = lyrics;
         this.options = options;
+        this.callbackFunction = callback;
 
         this.times = [];
         this.lines = [];
@@ -20,6 +21,7 @@ class Lyrica {
         let { options } = this;
         const validTypes = ["sync", "print", "parse"];
         const validAnimationTypes = ["scroll", "solid"];
+        const validAlignmentTypes = ["top", "center", "bottom"];
         const defaults = {
             type: "parse",
             offset: 0,
@@ -31,7 +33,9 @@ class Lyrica {
                 autoScroll: true,
                 wheelScroll: true,
                 touchScroll: true,
-                changeOnclick: true
+                changeOnclick: true,
+                activeLineAlignment: "center",
+                positionOffset: 0
             }
         };
         const optionsDataTypes = {
@@ -39,6 +43,9 @@ class Lyrica {
             string: ["type"],
             object: ["animations", "audioElement", "containerElement"],
             number: ["offset"]
+        };
+        const animationsDataTypes = {
+            number: ["positionOffset"]
         };
 
         const checkConds = function(consArray) {
@@ -67,11 +74,18 @@ class Lyrica {
         checkConds(basicConds);
 
         //  Validating options data types.
-        for (let dtyp in optionsDataTypes) {
+        for (const dtyp in optionsDataTypes) {
             for (const optn of optionsDataTypes[dtyp]) {
                 if (options[optn] !== undefined && typeof options[optn] !== dtyp) {
                     throw new Error(`${optn} has to be a/an ${dtyp}.`)
                 }
+            }
+        }
+
+        //  Validating animations options (only numbers)
+        for (const animOptn of animationsDataTypes["number"]) {
+            if (options.animations !== undefined && options.animations[animOptn] !== undefined && typeof options.animations[animOptn] !== "number") {
+                    throw new Error(`${animOptn} has to be a number in pixels.`)
             }
         }
 
@@ -86,7 +100,8 @@ class Lyrica {
         //  Validating options.
         const optionsConds = [
             /*options-type*/ [options.type && !validTypes.includes(options.type), `"${options.type}" is not a valid type.\n- (Valid Types: "${validTypes.join('", "')}")`],
-            /*options-animations*/ [options.animations && !validAnimationTypes.includes(options.animations.type), `"${this.options.animations.type}" is not a valid animation type.\n- (Valid Animations: "${validAnimationTypes.join('", "')}")`],
+            /*options-animations-type*/ [options.animations && !validAnimationTypes.includes(options.animations.type), `"${this.options.animations.type}" is not a valid animation type.\n- (Valid Animations: "${validAnimationTypes.join('", "')}")`],
+            /*options-animations-activeAlignment*/ [options.animations && !validAlignmentTypes.includes(options.animations.activeLineAlignment), `"${this.options.animations.activeLineAlignment}" is not a valid active-line aligment type.\n- (Valid Aligment types: "${validAlignmentTypes.join('", "')}")`],
             /*options-audioElement*/ [options.audioElement && !(options.audioElement instanceof HTMLAudioElement), "Invalid audio element: Please provide a valid `<audio>` HTML element."]
         ];
         checkConds(optionsConds);
@@ -176,6 +191,32 @@ class Lyrica {
         }
     }
 
+    scrollToActive(lyricIndex) {
+        const containerHeight = this.container.offsetHeight;
+        const lyricEl = this.container.querySelector(`.lyric:nth-child(${(lyricIndex + 1)})`);
+        const lyricHeight = lyricEl.offsetHeight;
+        const lyricTop = lyricEl.offsetTop;
+        const offset = this.options.animations.positionOffset;
+
+        let scrollLength;
+        switch (this.options.animations.activeLineAlignment) {
+            case 'center':
+                scrollLength = (lyricTop - ((containerHeight/2) - (lyricHeight/2))) + offset;
+                break;
+            case 'top':
+                scrollLength = (lyricTop - (lyricHeight/2)) + offset;
+                break;
+            default:
+                scrollLength = (lyricTop - ((containerHeight) - (lyricHeight))) + offset;
+                break;
+        }
+
+        this.container.scrollTo({
+            top: scrollLength,
+            behavior: 'smooth'
+        });
+    }
+
     scrollSyncHandler() {
         this.container.scrollTo({ top: 0 });
         let scrollEndTimer, waitToSureTimer;
@@ -192,17 +233,7 @@ class Lyrica {
 
                 scrollEndTimer = setTimeout(() => {
                     waitToSureTimer = setTimeout(() => {
-                        const currentIndex = this.gCurrentLyric?.[2] || 0;
-                        const contaHeight = this.container.offsetHeight;
-                        const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
-                        const lyricHeight = lyricEl.offsetHeight;
-                        const lyricTop = lyricEl.offsetTop;
-                        const calcTop = (lyricTop - ((contaHeight/2) - (lyricHeight/2)));
-
-                        this.container.scrollTo({
-                            top: calcTop,
-                            behavior: 'smooth'
-                        });
+                        this.scrollToActive(this.gCurrentLyric?.[2] || 0);
                         this.contaScroll = true;
                     }, 2000);
                 }, 150);
@@ -218,17 +249,7 @@ class Lyrica {
             });
             this.container.addEventListener("touchend", () => {
                 waitToSureTimer = setTimeout(() => {
-                        const currentIndex = this.gCurrentLyric?.[2] || 0;
-                        const contaHeight = this.container.offsetHeight;
-                        const lyricEl = this.container.querySelector(`.lyric:nth-child(${(currentIndex + 1)})`);
-                        const lyricHeight = lyricEl.offsetHeight;
-                        const lyricTop = lyricEl.offsetTop;
-                        const calcTop = (lyricTop - ((contaHeight/2) - (lyricHeight/2)));
-
-                        this.container.scrollTo({
-                            top: calcTop,
-                            behavior: 'smooth'
-                        });
+                        this.scrollToActive(this.gCurrentLyric?.[2] || 0);
                         this.contaScroll = true;
                     }, 2000);
             });
@@ -342,7 +363,8 @@ class Lyrica {
         const { options, times, lines, audio, offset } = this;
         const animationType = options.animations.type;
         const advancedState = options.isAdvanced && options.doAdvanced;
-        let currentIndex = [0, 0];
+        let currentIndex = 0;
+        let lastCurrentTime = 0;
         let interval;
 
         if (times[0] == 0) {
@@ -364,9 +386,10 @@ class Lyrica {
                 }
             }
 
-            this.sendLyric(animationType, index, "", advancedState, true);
+            this.sendLyric(animationType, index, advancedState, true);
 
-            currentIndex = [index, currentTime];
+            currentIndex = index;
+            lastCurrentTime = currentTime;
         };
 
         const sync = () => {
@@ -374,12 +397,13 @@ class Lyrica {
             findIndex();
             interval = setInterval(() => {
                 let currentTime = audio.currentTime * 1000;
-                if (Math.abs(currentTime - currentIndex[1]) < 70) {
-                    if (times[currentIndex[0]] - offset <= currentTime) {
-                        this.sendLyric(animationType, currentIndex[0], currentTime, advancedState, false);
-                        currentIndex = [currentIndex[0] + 1, currentTime];
+                if (Math.abs(currentTime - lastCurrentTime) < 70) {
+                    if (times[currentIndex] - offset <= currentTime) {
+                        this.sendLyric(animationType, currentIndex, advancedState, false);
+                        currentIndex += 1;
+                        lastCurrentTime = currentTime;
                     } else {
-                        currentIndex = [currentIndex[0], currentTime];
+                        lastCurrentTime = currentTime;
                     }
                 } else {
                     findIndex();
@@ -403,7 +427,7 @@ class Lyrica {
         audio.addEventListener("seeked", findIndex);
     }
 
-    sendLyric(mode, lineIndex, currentTime, advanced, fromFindIndex) {
+    sendLyric(mode, lineIndex, advanced, fromFindIndex) {
         const {lines, times, container, options} = this;
         const matched = advanced ? this.advancedMatchIndex(lineIndex) : false;
         const solidSendType = () => {
@@ -461,15 +485,7 @@ class Lyrica {
             container.querySelector(`.lyric:nth-child(${index})`).classList.add("active");
 
             if (options.animations.autoScroll && this.contaScroll) {
-                const containerHeight = container.offsetHeight;
-                const lyricHeight = container.querySelector(`.lyric:nth-child(${(lyricI+1)})`).offsetHeight;
-                const lyricTop = container.querySelector(`.lyric:nth-child(${(lyricI+1)})`).offsetTop;
-                const calcTop = (lyricTop - ((containerHeight/2) - (lyricHeight/2)));
-                
-                container.scrollTo({
-                    top: calcTop,
-                    behavior: 'smooth'
-                });
+                this.scrollToActive(lyricI);
             }
         };
         const advancedScrollSendType = function() {
@@ -495,6 +511,7 @@ class Lyrica {
             this.gCurrentLyric = [lines[lineIndex], times[lineIndex], lineIndex];
         }
 
+        this.callbackFunction?.();
         switch (mode) {
             case "solid":
                 if (advanced) {
