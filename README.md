@@ -64,14 +64,14 @@ const example = new Lyrica(rawLyrics, {
 
 # Basic Usage
 ```javascript
-const example = new Lyrica(lyrics, options, fallback)
+const example = new Lyrica(lyrics, options, callback)
 ```
 
 ## Input
 The first parameter is raw `.lrc` text.
 If you want to use a file, load the file yourself first and pass its contents into the constructor.
 
-## Fallback Function
+## Callback Function
 The third parameter is a callback functon.
 It is called whenever a new lyric line becomes active. This parameter is optional and only works with the `sync` type.
 
