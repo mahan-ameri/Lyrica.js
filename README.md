@@ -105,20 +105,20 @@ The second parameter is an options object that configures the class.
 
 ```javascript
 {
-  type: "sync" | "print" | "parse", // Required
+  type: "parse" | "print" | "sync",
   audioElement: htmlAudio, // Required for "sync"
   containerElement: lyricsBox, // Required for "print" and "sync"
-  isAdvanced: false, // Optional
-  doAdvanced: false, // Optional
-  autoStart: true, // Optional
-  offset: 0, // Optional
-  animations: { // Optional
+  isAdvanced: false,
+  doAdvanced: false,
+  autoStart: true,
+  offset: 0,
+  animations: {
     type: "solid" | "scroll",
     autoScroll: true,
     wheelScroll: true,
     touchScroll: true,
     changeOnclick: true,
-    activeLineAlignment: 'center',
+    activeLineAlignment: "center" | "top" | "bottom,
     positionOffset: 0
   }
 }
