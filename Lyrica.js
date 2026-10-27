@@ -19,7 +19,7 @@ class Lyrica {
     validateInputs() {
         const { lyricsText } = this;
         let { options } = this;
-        const validTypes = ["sync", "print", "parse"];
+        const validTypes = ["sync", "render", "parse"];
         const validAnimationTypes = ["scroll", "solid"];
         const validAlignmentTypes = ["top", "center", "bottom"]
         const defaults = {
@@ -61,7 +61,7 @@ class Lyrica {
             switch (options.type) {
                 case "parse":
                     return [];
-                case "print":
+                case "render":
                     return ['containerElement'];
                 default:
                     return ['audioElement', 'containerElement'];
@@ -178,7 +178,7 @@ class Lyrica {
         switch (this.options.type) {
             case "parse":
                 break
-            case "print":
+            case "render":
                 this.container = options.containerElement
                 this.renderLyrics()
                 break
@@ -324,9 +324,10 @@ class Lyrica {
         return ( parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(paddedMs) );
     }
 
-    renderLyrics() {
-        const { options, times, lines, linesCounts, offset, container} = this;
+    renderLyrics(conta) {
+        const { options, times, lines, linesCounts, offset} = this;
         const fragment = document.createDocumentFragment();
+        const container = conta || this.container
         
         if (options.isAdvanced) {
             for (const i in lines) {
