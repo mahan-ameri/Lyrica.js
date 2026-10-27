@@ -221,49 +221,58 @@ class Lyrica {
 
     scrollSyncHandler() {
         this.container.scrollTo({ top: 0 });
-        let scrollEndTimer, waitToSureTimer;
-        const wheel_scroll = this.options.animations.wheelScroll, touch_scroll = this.options.animations.touchScroll, change_onclick = this.options.animations.changeOnclick;
+        let resumeTimer;
+        let isTouching = false;
+        const { wheelScroll, touchScroll, changeOnclick } = this.options.animations;
+        const pauseAutoScroll = () => {
+            clearTimeout(resumeTimer);
+            this.contaScroll = false;
+        };
+        const resumeAutoScroll = (lyricIndex = this.gCurrentLyric?.[2] ?? 0) => {
+            clearTimeout(resumeTimer);
+            this.contaScroll = true;
+            if (this.options.animations.autoScroll) {
+                this.scrollToActive(lyricIndex);
+            }
+        };
+        const scheduleResume = (delay) => {
+            clearTimeout(resumeTimer);
+            if (!isTouching) {
+                resumeTimer = setTimeout(() => resumeAutoScroll(), delay);
+            }
+        };
 
-        if (wheel_scroll) {
+        if (wheelScroll) {
             this.container.addEventListener("wheel", () => {
-                clearTimeout(scrollEndTimer);
-                clearTimeout(waitToSureTimer);
-
-                if (this.contaScroll) {
-                    this.contaScroll = false;
-                }
-
-                scrollEndTimer = setTimeout(() => {
-                    waitToSureTimer = setTimeout(() => {
-                        this.scrollToActive(this.gCurrentLyric?.[2] || 0)
-                        this.contaScroll = true;
-                    }, 2000);
-                }, 150);
-            });
+                pauseAutoScroll();
+                scheduleResume(2150);
+            }, { passive: true });
         }
 
-        if (touch_scroll) {
+        if (touchScroll) {
             this.container.addEventListener("touchstart", () => {
-                clearTimeout(waitToSureTimer)
-                if (this.contaScroll) {
-                    this.contaScroll = false;
-                }
-            });
-            this.container.addEventListener("touchend", () => {
-                waitToSureTimer = setTimeout(() => {
-                        this.scrollToActive(this.gCurrentLyric?.[2] || 0)
-                        this.contaScroll = true;
-                    }, 2000);
-            });
+                isTouching = true;
+                pauseAutoScroll();
+            }, { passive: true });
+            const finishTouch = (event) => {
+                isTouching = event.touches.length > 0;
+                scheduleResume(2000);
+            };
+            this.container.addEventListener("touchend", finishTouch, { passive: true });
+            this.container.addEventListener("touchcancel", finishTouch, { passive: true });
         }
 
-        if (change_onclick) {
+        if (changeOnclick) {
             this.container.addEventListener("click", (e) => {
-                const lyric = e.target.closest(".lyric");
-                if (lyric !== null) {
-                    let time = lyric.getAttribute("data-time");
-                    this.audio.currentTime = (Number(time) / 1000) + 0.2;
-                }
+                const lyric = e.target.closest?.(".lyric");
+                const lyricIndex = Array.from(this.container.children).indexOf(lyric);
+                if (lyricIndex === -1) return;
+
+                const time = lyric.getAttribute("data-time");
+                if (time === null || time.trim() === "" || !Number.isFinite(Number(time))) return;
+
+                this.audio.currentTime = (Number(time) / 1000) + 0.2;
+                resumeAutoScroll(lyricIndex);
             })
         }
 
