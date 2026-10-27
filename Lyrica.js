@@ -28,6 +28,7 @@ class Lyrica {
             isAdvanced: false,
             doAdvanced: undefined,
             autoStart: true,
+            singleElementRender: false,
             animations: {
                 type: "solid",
                 autoScroll: true,
@@ -39,7 +40,7 @@ class Lyrica {
             }
         }
         const optionsDataTypes = {
-            boolean: ["isAdvanced", "doAdvanced", "autoStart"],
+            boolean: ["isAdvanced", "doAdvanced", "autoStart", "singleElementRender"],
             string: ["type"],
             object: ["animations", "audioElement", "containerElement"],
             number: ["offset"]
@@ -96,6 +97,7 @@ class Lyrica {
         
         options = mergedOptions;
         options.doAdvanced = options.doAdvanced === undefined ? options.isAdvanced : options.doAdvanced;
+        options.singleElementRender = options.type === "render" && options.singleElementRender;
 
         this.options = options;
         
@@ -180,7 +182,7 @@ class Lyrica {
                 break
             case "render":
                 this.container = options.containerElement
-                this.renderLyrics()
+                this.renderLyrics(undefined, options.singleElementRender)
                 break
             case "sync":
                 this.container = options.containerElement
@@ -333,10 +335,17 @@ class Lyrica {
         return ( parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(paddedMs) );
     }
 
-    renderLyrics(conta) {
+    renderLyrics(conta, singleElement = false) {
         const { options, times, lines, linesCounts, offset} = this;
-        const fragment = document.createDocumentFragment();
         const container = conta || this.container
+
+        if (singleElement) {
+            container.style.whiteSpace = "pre-wrap";
+            container.textContent = lines.map(line => Array.isArray(line) ? line.join('') : line).join('\n');
+            return;
+        }
+
+        const fragment = document.createDocumentFragment();
         
         if (options.isAdvanced) {
             for (const i in lines) {
