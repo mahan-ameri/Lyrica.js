@@ -80,9 +80,10 @@ The second parameter is an options object that configures the class.
 
 | Option | Type | Default | Description |
 |--------|------|---------|-------------|
-| type | string | `"parse"` | `"sync"`, `"print"`, or `"parse"` |
+| type | string | `"parse"` | `"sync"`, `"render"`, or `"parse"` |
 | audioElement | HTMLAudioElement | - | The `<audio>` element used for sync mode; required for `sync` |
-| containerElement | HTMLElement | - | The lyrics container element; required for `print` and `sync` |
+| containerElement | HTMLElement | - | The lyrics container element; required for `render` and `sync` |
+| singleElementRender | boolean | false | In `render` mode, write all lyric lines directly into the container with preserved line breaks. Set to `false` in `sync` and `parse` modes |
 | isAdvanced | boolean | false | Enable advanced timing parsing for word-level lyrics |
 | doAdvanced | boolean | `isAdvanced` value | Render advanced timing segments as separate lyric parts |
 | offset | number | inset `.lrc` offset / `0` | Adjust lyric timing in milliseconds |
@@ -105,9 +106,10 @@ The second parameter is an options object that configures the class.
 
 ```javascript
 {
-  type: "parse" | "print" | "sync",
+  type: "parse" | "render" | "sync",
   audioElement: htmlAudio, // Required for "sync"
-  containerElement: lyricsBox, // Required for "print" and "sync"
+  containerElement: lyricsBox, // Required for "render" and "sync"
+  singleElementRender: false,
   isAdvanced: false,
   doAdvanced: false,
   autoStart: true,
@@ -134,6 +136,7 @@ The second parameter is an options object that configures the class.
 | `getCurrent()` | None | Array | Returns the current lyric info as `[text, time, index]`. Only works in `sync` mode | `example.getCurrent()` |
 | `start()` | None | None | Starts syncing lyrics with audio. Only works in `sync` mode | `example.start()` |
 | `pause()` | None | None | Pauses lyric syncing. Only works in `sync` mode | `example.pause()` |
+| `renderLyrics(container, singleElement)` | HTMLElement (optional), Boolean (default: `false`) | None | Render parsed lyrics into the supplied container (or the instance's container). With `true`, replace its contents with plain lyric text and preserved line breaks | `example.renderLyrics(lyricsBox, true)` |
 
 ### Navigation Methods
 
@@ -148,8 +151,49 @@ The second parameter is an options object that configures the class.
 
 | Method | Parameters | Return Value | Description | Example |
 |--------|------------|--------------|-------------|----------|
-| `searchLyric(time, exact, index)` | `time`: String/Number<br>`exact`: Boolean<br>`index`: Boolean | Array | Finds the lyric that matches or precedes a timestamp | `example.searchLyric("1:30.00", false, true)` |
-| `searchTime(lyric, index)` | `lyric`: String<br>`index`: Boolean | Array | Finds the timestamp(s) for a given lyric text | `example.searchTime("Hello", true)` |
+| `searchLyric(time, exact, index)` | `time`: String/Number<br>`exact`: Boolean (optional, defaults to `false`)<br>`index`: Boolean (optional, defaults to `false`) | `[text]` or `[text, index]` | Finds the lyric at or immediately before a timestamp; `exact: true` requires a matching timestamp | `example.searchLyric("1:30.00", false, true)` |
+| `searchTime(lyric, includeIndexes)` | `lyric`: String<br>`includeIndexes`: Boolean (optional, defaults to `false`) | `[matchedTimes]` or `[matchedTimes, matchedTimeIndexes]` | Finds all timestamps for an exact lyric text match; pass `true` to include numeric indexes into `getData().times` | `example.searchTime("Hello", true)` |
+
+```javascript
+const searchableLyrics = new Lyrica(
+    "[00:01.00]Hello\n[00:02.00]World\n[00:03.00]Hello",
+    { type: "parse" }
+);
+
+searchableLyrics.searchTime("Hello");             // [[1000, 3000]]
+searchableLyrics.searchTime("Hello", true);       // [[1000, 3000], [0, 2]]
+searchableLyrics.searchTime("Missing", true);     // [[], []]
+searchableLyrics.searchLyric(1500, false, true);   // ["Hello", 0]
+searchableLyrics.searchLyric("00:02.00", true);    // ["World"]
+searchableLyrics.searchLyric(3000, false, true);   // ["Hello", 2]
+searchableLyrics.searchLyric(4000, false, true);   // ["Hello", 2]
+searchableLyrics.searchLyric(0, false, true);      // [undefined, -1]
+```
+
+### Custom Synchronization
+
+In `sync` mode, Lyrica uses a 10 ms `setInterval` to check playback time and synchronize the rendered lyrics. You can also control synchronization yourself: create a `parse` instance and call `searchLyric` with the current playback time from an audio event, `requestAnimationFrame`, or your own update loop.
+
+Numeric time inputs are in **milliseconds**. With `exact: false`, `searchLyric` uses binary search to find the lyric at or immediately before that time. It returns `[text]`, or `[text, lineIndex]` when the third argument is `true`. Your code handles displaying the result.
+
+Using the `rawLyrics`, `player`, and `lyricsBox` variables from the Quick Start:
+
+```javascript
+const parsedLyrics = new Lyrica(rawLyrics, { type: "parse" });
+
+function updateLyrics() {
+    // Add the offset to match the timing used by built-in sync mode.
+    const time = player.currentTime * 1000 + parsedLyrics.offset;
+    const [text] = parsedLyrics.searchLyric(time, false);
+    lyricsBox.textContent = text ?? "";
+}
+
+player.addEventListener("timeupdate", updateLyrics);
+player.addEventListener("seeked", updateLyrics);
+updateLyrics();
+```
+
+Use this instance in place of the Quick Start's `sync` instance to let your own update method control synchronization.
 
 ---------
 ## CSS Classes
@@ -162,9 +206,11 @@ The second parameter is an options object that configures the class.
     * By default (no advanced), each line is a `<p>` element in both solid and scroll modes.
     * When `isAdvanced: true` and `doAdvanced: true`, each word inside the line is wrapped in a `<p>` for fine-grained advanced highlighting.
 * In `advanced + doAdvanced`, the line itself still has the `.lyric` class, but instead of plain text, its words are split into `<p>`s so timing can highlight each word individually.
+* With `type: "render"` and `singleElementRender: true`, lyric text replaces the container's contents directly, with `white-space: pre-wrap` preserving line breaks. No wrapper or `.lyric` elements are created. Advanced timing segments are joined into plain text. The default and sync rendering continue to use separate elements.
 
 ---------
 # License
 MIT License © mahan-ameri
 
+---
 ---

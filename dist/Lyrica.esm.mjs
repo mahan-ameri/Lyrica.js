@@ -19,7 +19,7 @@ class Lyrica {
     validateInputs() {
         const { lyricsText } = this;
         let { options } = this;
-        const validTypes = ["sync", "print", "parse"];
+        const validTypes = ["sync", "render", "parse"];
         const validAnimationTypes = ["scroll", "solid"];
         const validAlignmentTypes = ["top", "center", "bottom"];
         const defaults = {
@@ -28,6 +28,7 @@ class Lyrica {
             isAdvanced: false,
             doAdvanced: undefined,
             autoStart: true,
+            singleElementRender: false,
             animations: {
                 type: "solid",
                 autoScroll: true,
@@ -39,7 +40,7 @@ class Lyrica {
             }
         };
         const optionsDataTypes = {
-            boolean: ["isAdvanced", "doAdvanced", "autoStart"],
+            boolean: ["isAdvanced", "doAdvanced", "autoStart", "singleElementRender"],
             string: ["type"],
             object: ["animations", "audioElement", "containerElement"],
             number: ["offset"]
@@ -59,7 +60,7 @@ class Lyrica {
             switch (options.type) {
                 case "parse":
                     return [];
-                case "print":
+                case "render":
                     return ['containerElement'];
                 default:
                     return ['audioElement', 'containerElement'];
@@ -94,6 +95,7 @@ class Lyrica {
         
         options = mergedOptions;
         options.doAdvanced = options.doAdvanced === undefined ? options.isAdvanced : options.doAdvanced;
+        options.singleElementRender = options.type === "render" && options.singleElementRender;
 
         this.options = options;
         
@@ -176,9 +178,9 @@ class Lyrica {
         switch (this.options.type) {
             case "parse":
                 break
-            case "print":
+            case "render":
                 this.container = options.containerElement;
-                this.renderLyrics();
+                this.renderLyrics(undefined, options.singleElementRender);
                 break
             case "sync":
                 this.container = options.containerElement;
@@ -219,49 +221,58 @@ class Lyrica {
 
     scrollSyncHandler() {
         this.container.scrollTo({ top: 0 });
-        let scrollEndTimer, waitToSureTimer;
-        const wheel_scroll = this.options.animations.wheelScroll, touch_scroll = this.options.animations.touchScroll, change_onclick = this.options.animations.changeOnclick;
+        let resumeTimer;
+        let isTouching = false;
+        const { wheelScroll, touchScroll, changeOnclick } = this.options.animations;
+        const pauseAutoScroll = () => {
+            clearTimeout(resumeTimer);
+            this.contaScroll = false;
+        };
+        const resumeAutoScroll = (lyricIndex = this.gCurrentLyric?.[2] ?? 0) => {
+            clearTimeout(resumeTimer);
+            this.contaScroll = true;
+            if (this.options.animations.autoScroll) {
+                this.scrollToActive(lyricIndex);
+            }
+        };
+        const scheduleResume = (delay) => {
+            clearTimeout(resumeTimer);
+            if (!isTouching) {
+                resumeTimer = setTimeout(() => resumeAutoScroll(), delay);
+            }
+        };
 
-        if (wheel_scroll) {
+        if (wheelScroll) {
             this.container.addEventListener("wheel", () => {
-                clearTimeout(scrollEndTimer);
-                clearTimeout(waitToSureTimer);
-
-                if (this.contaScroll) {
-                    this.contaScroll = false;
-                }
-
-                scrollEndTimer = setTimeout(() => {
-                    waitToSureTimer = setTimeout(() => {
-                        this.scrollToActive(this.gCurrentLyric?.[2] || 0);
-                        this.contaScroll = true;
-                    }, 2000);
-                }, 150);
-            });
+                pauseAutoScroll();
+                scheduleResume(2150);
+            }, { passive: true });
         }
 
-        if (touch_scroll) {
+        if (touchScroll) {
             this.container.addEventListener("touchstart", () => {
-                clearTimeout(waitToSureTimer);
-                if (this.contaScroll) {
-                    this.contaScroll = false;
-                }
-            });
-            this.container.addEventListener("touchend", () => {
-                waitToSureTimer = setTimeout(() => {
-                        this.scrollToActive(this.gCurrentLyric?.[2] || 0);
-                        this.contaScroll = true;
-                    }, 2000);
-            });
+                isTouching = true;
+                pauseAutoScroll();
+            }, { passive: true });
+            const finishTouch = (event) => {
+                isTouching = event.touches.length > 0;
+                scheduleResume(2000);
+            };
+            this.container.addEventListener("touchend", finishTouch, { passive: true });
+            this.container.addEventListener("touchcancel", finishTouch, { passive: true });
         }
 
-        if (change_onclick) {
+        if (changeOnclick) {
             this.container.addEventListener("click", (e) => {
-                const lyric = e.target.closest(".lyric");
-                if (lyric !== null) {
-                    let time = lyric.getAttribute("data-time");
-                    this.audio.currentTime = (Number(time) / 1000) + 0.2;
-                }
+                const lyric = e.target.closest?.(".lyric");
+                const lyricIndex = Array.from(this.container.children).indexOf(lyric);
+                if (lyricIndex === -1) return;
+
+                const time = lyric.getAttribute("data-time");
+                if (time === null || time.trim() === "" || !Number.isFinite(Number(time))) return;
+
+                this.audio.currentTime = (Number(time) / 1000) + 0.2;
+                resumeAutoScroll(lyricIndex);
             });
         }
 
@@ -322,8 +333,16 @@ class Lyrica {
         return ( parseInt(min) * 60 * 1000 + parseInt(sec) * 1000 + parseInt(paddedMs) );
     }
 
-    renderLyrics() {
-        const { options, times, lines, linesCounts, offset, container} = this;
+    renderLyrics(conta, singleElement = false) {
+        const { options, times, lines, linesCounts, offset} = this;
+        const container = conta || this.container;
+
+        if (singleElement) {
+            container.style.whiteSpace = "pre-wrap";
+            container.textContent = lines.map(line => Array.isArray(line) ? line.join('') : line).join('\n');
+            return;
+        }
+
         const fragment = document.createDocumentFragment();
         
         if (options.isAdvanced) {
@@ -359,6 +378,23 @@ class Lyrica {
         container.appendChild(fragment);
     }
 
+    findTimeIndex(time, timestamps = this.times) {
+        let left = 0, right = timestamps.length - 1, index = -1;
+
+        while (left <= right) {
+            const mid = left + Math.floor((right - left) / 2);
+
+            if (timestamps[mid] <= time) {
+                index = mid;
+                left = mid + 1;
+            } else {
+                right = mid - 1;
+            }
+        }
+
+        return index
+    }
+
     syncLyrics() {
         const { options, times, lines, audio, offset } = this;
         const animationType = options.animations.type;
@@ -373,18 +409,7 @@ class Lyrica {
 
         const findIndex = () => {
             const currentTime = audio.currentTime * 1000;
-            let left = 0, right = times.length - 1, index = 0;
-
-            while (left <= right) {
-                const mid = left + Math.floor((right - left) / 2);
-
-                if ((times[mid] - offset) <= currentTime) {
-                    index = mid;
-                    left = mid + 1;
-                } else {
-                    right = mid - 1;
-                }
-            }
+            const index = Math.max(0, this.findTimeIndex(currentTime + offset));
 
             this.sendLyric(animationType, index, advancedState, true);
 
@@ -552,15 +577,13 @@ class Lyrica {
         const { times, lines, linesCounts} = this;
         const { isAdvanced, doAdvanced } = this.options;
         
-        function findLyric(time, index) {
-            for (let i = 0; i < lines.length; i++) {
-                const indx = isAdvanced && doAdvanced ? linesCounts[i] : i;
-                if (times[indx] > (time)) {
-                    const text = isAdvanced && doAdvanced ? String(lines[(i-1)].join('')) : lines[(i-1)];
-                    return index ? [text, i-1] : [text]
-                }
-            }
-        }
+        const findLyric = (time, index) => {
+            const advanced = isAdvanced && doAdvanced;
+            const lineTimes = advanced ? linesCounts.map(i => times[i]) : times;
+            const i = this.findTimeIndex(time, lineTimes);
+            const text = i < 0 ? undefined : advanced ? lines[i].join('') : lines[i];
+            return index ? [text, i] : [text]
+        };
         function findExactLyric(time, index) {
             const i = times.indexOf(time);
             const indx = isAdvanced && doAdvanced ? linesCounts[i] : i;
@@ -583,22 +606,23 @@ class Lyrica {
         }
     }
 
-    searchTime(lyric, index) {
+    searchTime(lyric, includeIndexes = false) {
         const { times, lines, linesCounts } = this;
         const { isAdvanced, doAdvanced } = this.options;
-        let matchedTimes = [];
-        let matchedTimesIndexes = [];
-        for (const i in lines) {
-            const index = isAdvanced && doAdvanced ? linesCounts[i] : i;
-            const wanted = isAdvanced && doAdvanced ? String(lines[i].join('')) : lines[i];
+        const advanced = isAdvanced && doAdvanced;
+        const matchedTimes = [];
+        const matchedTimeIndexes = [];
+        for (let i = 0; i < lines.length; i++) {
+            const timeIndex = advanced ? linesCounts[i] : i;
+            const wanted = advanced ? lines[i].join('') : lines[i];
 
             if (wanted === lyric) {
-                matchedTimes.push(times[index]);
-                matchedTimesIndexes.push(index);
+                matchedTimes.push(times[timeIndex]);
+                matchedTimeIndexes.push(timeIndex);
             }
         }
 
-        return index ? [matchedTimes, matchedTimesIndexes] : [matchedTimes]
+        return includeIndexes === true ? [matchedTimes, matchedTimeIndexes] : [matchedTimes]
     }
 
     getCurrent() {

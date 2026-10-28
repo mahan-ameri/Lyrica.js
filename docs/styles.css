@@ -240,7 +240,7 @@ section .static {
     left: 50%;
     display: flex;
     align-items: center;
-    justify-content: end;
+    justify-content: space-between;
     transform: translateX(-50%);
     margin-top: 1.1vh;
     background: transparent;
@@ -331,6 +331,16 @@ div:hover::-webkit-scrollbar-thumb {
     display: inline-flex;
     justify-content: center;
     transition: 0.1s;
+}
+
+.top #lyrica-container2.single-element {
+    display: block;
+    text-align: center;
+    font-size: 2.1vh;
+    font-family: serif;
+    line-height: 1.8;
+    padding-top: 6vh;
+    padding-bottom: 2vh;
 }
 
 .top #lyrica-container2 #load {
@@ -575,7 +585,7 @@ section .audio {
     color: #add838;
     background: #3c491b;
 }
-.overlay .toggle-karaoke {
+.overlay .toggle-karaoke, .overlay .toggle-render {
     height: 100%;
     width: auto;
     display: flex;
@@ -592,15 +602,18 @@ section .audio {
     transition: box-shadow 0.1s, transform 0.1s;
     background: #add838;
 }
-.overlay .toggle-karaoke:active {
+.overlay .toggle-render {
+    border: none;
+}
+.overlay .toggle-karaoke:active, .overlay .toggle-render:active {
     box-shadow: 0 0 0 #000;
     transform: translateY(0.2vh);
 }
-.overlay .toggle-karaoke.activ {
+.overlay .toggle-karaoke.activ, .overlay .toggle-render.activ {
     color: #add838;
     background: #3c491b;
 }
-.overlay .toggle-karaoke.hidden {
+.overlay .toggle-karaoke.hidden, .overlay .toggle-render.hidden {
     width: 0;
     padding: 0;
     overflow: hidden;
@@ -628,6 +641,7 @@ section .audio {
     flex-wrap: wrap;
     justify-content: center;
     overflow-y: scroll;
+    padding-top: 40%;
     box-shadow: 0 0 0.9vh -0.4vh #333 inset;
     border-radius: 0.5vh 0.5vh 1vh 1vh;
     background: transparent;
@@ -640,11 +654,18 @@ section .audio {
     display: flex;
     align-items: center;
     justify-content: center;
+    padding: 1.5vh 0;
     white-space: pre;
     font-size: 1.7vh;
     cursor: pointer;
-    margin-top: 3vh;
-    font-family: monospace;
+    font-family: Arial, Helvetica, sans-serif;
+}
+.audio .lyrica-karaoke-container .lyric:hover {
+    font-size: 2vh;
+    font-weight: bold;
+    opacity: 0.4;
+    border-radius: 0.5rem;
+    background: rgba(0, 0, 0, 0.1);
 }
 .lyrica-karaoke-container .lyric p {
     opacity: 0.5;
@@ -652,6 +673,7 @@ section .audio {
 }
 .lyrica-karaoke-container .lyric.active p {
     font-size: 2.3vh;
+    font-weight: bold;
 }
 .lyrica-karaoke-container .lyric p.active {
     font-weight: bold;
@@ -670,6 +692,7 @@ section .audio {
     display: flex;
     flex-wrap: wrap;
     justify-content: center;
+    padding-top: 40%;
     box-shadow: 0 0 0.9vh -0.4vh #333 inset;
     border-radius: 0.5vh 0.5vh 1vh 1vh;
     background: transparent;

@@ -23,9 +23,10 @@
             <span class="const"><p id="a">const</p><p id="f"> example1</p><p style="color: #D4D4D4;"> =</p><p id="a"> new</p><p id="b"> Lyrica</p><p id="g">(</p><p style="color: #D4D4D4;">...</p><p id="g">)</p><p style="color: #D4D4D4;">;</p></span>
             <div class="function-board">
                 <span onclick="onGetCurrent()"><p id="a">example1</p><p id="b">.getCurrent</p><p id="c">()</p></span>
-                <span onclick="onSearchTime()"><p id="a">example1</p><p id="b">.searchTime</p><p id="c">(</p><p id="e">" I'm grateful, oh yeah"</p><p id="c">)</p></span>
+                <span onclick="onSearchTime()"><p id="a">example1</p><p id="b">.searchTime</p><p id="c">(</p><p id="e">" I'm grateful, oh yeah"</p><p id="b">, </p><p id="a">true</p><p id="c">)</p></span>
                 <span onclick="onGetData()"><p id="a">example1</p><p id="b">.getData</p><p id="c">()</p></span>
                 <span onclick="onSearchLyric()"><p id="a">example1</p><p id="b">.searchLyric</p><p id="c">(</p><p id="e">"00:58.00"</p><p id="b">, </p><p id="a">false</p><p id="b">, </p><p id="a">true</p><p id="c">)</p></span>
+                <span onclick="onSearchLyric(0)"><p id="a">example1</p><p id="b">.searchLyric</p><p id="c">(</p><p id="b">0, </p><p id="a">false</p><p id="b">, </p><p id="a">true</p><p id="c">)</p></span>
                 <span onclick="onGoToIndex()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">index: </p><p id="b">12</p><p id="a">}</p><p id="c">)</p></span>
                 <span onclick="onGoToLyric()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">lyric: </p><p id="g">[</p><p id="e">" Only a path"</p><p id="b">, </p><p id="b">1</p><p id="g">]</p><p id="a">}</p><p id="c">)</p></span>
                 <span onclick="onGoToTime()"><p id="a">example1</p><p id="b">.goTo</p><p id="c">(</p><p id="a">{</p><p id="f">time: </p><p id="b">65000</p><p id="a">}</p><p id="c">)</p></span>
@@ -94,12 +95,15 @@
                     <span id="tip"><p id="icon">!</p><p id="text">This method renders extracted lyrics from file.</p></span>
                 </div>
                 <div class="overlay">
+                    <button type="button" class="toggle-render" onclick="toggleSingleElementRender()" aria-label="Single-element rendering" aria-pressed="false">
+                        multi-element
+                    </button>
                     <div class="raw-text" onclick="toggleRawLyrics('static')">
                         <p>Raw</p>
                     </div>
                 </div>
                 <div class="raw-text-conta">
-                    <pre data-lyric-role="print"></pre>
+                    <pre data-lyric-role="render"></pre>
                 </div>
                 <div id="lyrica-container2">
                     <span id="load"><p>Load Lyric</p></span>
@@ -163,7 +167,7 @@
             type: "sync",
             audioElement,
             containerElement: standardContainer,
-            offset: 200,
+            offset: 400,
             autoStart: false,
             animations: {
                 type: "scroll",
@@ -179,6 +183,7 @@
         let activeLyrics = standardPlayer;
         let advancedPlayer = null;
         let printPlayer = null;
+        let singleElementRender = false;
 
         const summarizeData = ({ lines, times, metadata }) => {
             const metadataKeys = Object.keys(metadata).join(", ") || "none";
@@ -188,8 +193,9 @@
         const formatValue = (value) => {
             if (value === undefined) return "undefined";
             if (value === null) return "null";
-            if (Array.isArray(value)) return JSON.stringify(value);
+            if (Array.isArray(value)) return `[${value.map(formatValue).join(", ")}]`;
             if (typeof value === "object") return summarizeData(value);
+            if (typeof value === "string") return JSON.stringify(value);
             return String(value);
         };
 
@@ -211,13 +217,31 @@
 
             const printLyrics = await readLyricFile(lyricFiles.print);
             printLyricsText = printLyrics;
+            printContainer.classList.toggle("single-element", singleElementRender);
             printPlayer = new Lyrica(printLyrics, {
-                type: "print",
+                type: "render",
                 containerElement: printContainer,
+                singleElementRender,
                 isAdvanced: true,
                 doAdvanced: false
             });
         });
+
+        window.toggleSingleElementRender = () => {
+            const toggle = document.querySelector(".static .toggle-render");
+            singleElementRender = !singleElementRender;
+            toggle.classList.toggle("activ", singleElementRender);
+            toggle.setAttribute("aria-pressed", String(singleElementRender));
+            toggle.textContent = singleElementRender ? "single-element" : "multi-element";
+
+            if (!printPlayer) return;
+
+            printContainer.replaceChildren();
+            printContainer.style.whiteSpace = "";
+            printContainer.classList.toggle("single-element", singleElementRender);
+            printPlayer.renderLyrics(printContainer, singleElementRender);
+            printContainer.scrollTop = 0;
+        };
 
         audioElement.addEventListener("play", () => activeLyrics.start());
         audioElement.addEventListener("pause", () => activeLyrics.pause());
@@ -226,8 +250,8 @@
         window.prev = () => standardPlayer.previous();
         window.last = () => standardPlayer.last();
 
-        window.onSearchTime = () => runDemoMethod(() => standardPlayer.searchTime(" I'm grateful, oh yeah"));
-        window.onSearchLyric = () => runDemoMethod(() => standardPlayer.searchLyric("00:58.00", false, true));
+        window.onSearchTime = () => runDemoMethod(() => standardPlayer.searchTime(" I'm grateful, oh yeah", true));
+        window.onSearchLyric = (time = "00:58.00") => runDemoMethod(() => standardPlayer.searchLyric(time, false, true));
         window.onGetData = () => runDemoMethod(() => standardPlayer.getData());
         window.onGetCurrent = () => runDemoMethod(() => standardPlayer.getCurrent());
         window.onGoToIndex = () => runDemoMethod(() => standardPlayer.goTo({ index: 12 }));
@@ -276,6 +300,8 @@
 
             if (sectionName === "audio") {
                 document.querySelector(".audio .toggle-karaoke")?.classList.toggle("hidden");
+            } else {
+                document.querySelector(".static .toggle-render")?.classList.toggle("hidden");
             }
 
             await loadRawLyricsContent(sectionName);
@@ -293,7 +319,7 @@
                 type: "sync",
                 audioElement,
                 containerElement: advancedContainer,
-                offset: 200,
+                offset: 0,
                 isAdvanced: true,
                 doAdvanced: true,
                 autoStart: false,
@@ -302,7 +328,9 @@
                     autoScroll: true,
                     wheelScroll: true,
                     touchScroll: true,
-                    changeOnclick: true
+                    changeOnclick: true,
+                    activeLineAlignment: "center",
+                    positionOffset: standardContainer.offsetHeight*0.15
                 }
             });
 
