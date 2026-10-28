@@ -380,6 +380,23 @@ class Lyrica {
         container.appendChild(fragment);
     }
 
+    findTimeIndex(time, timestamps = this.times) {
+        let left = 0, right = timestamps.length - 1, index = -1
+
+        while (left <= right) {
+            const mid = left + Math.floor((right - left) / 2)
+
+            if (timestamps[mid] <= time) {
+                index = mid
+                left = mid + 1
+            } else {
+                right = mid - 1
+            }
+        }
+
+        return index
+    }
+
     syncLyrics() {
         const { options, times, lines, audio, offset } = this
         const animationType = options.animations.type
@@ -394,18 +411,7 @@ class Lyrica {
 
         const findIndex = () => {
             const currentTime = audio.currentTime * 1000;
-            let left = 0, right = times.length - 1, index = 0
-
-            while (left <= right) {
-                const mid = left + Math.floor((right - left) / 2)
-
-                if ((times[mid] - offset) <= currentTime) {
-                    index = mid
-                    left = mid + 1
-                } else {
-                    right = mid - 1
-                }
-            }
+            const index = Math.max(0, this.findTimeIndex(currentTime + offset))
 
             this.sendLyric(animationType, index, advancedState, true)
 
@@ -574,14 +580,12 @@ class Lyrica {
         const { times, lines, linesCounts} = this
         const { isAdvanced, doAdvanced } = this.options
         
-        function findLyric(time, index) {
-            for (let i = 0; i < lines.length; i++) {
-                const indx = isAdvanced && doAdvanced ? linesCounts[i] : i
-                if (times[indx] > (time)) {
-                    const text = isAdvanced && doAdvanced ? String(lines[(i-1)].join('')) : lines[(i-1)]
-                    return index ? [text, i-1] : [text]
-                }
-            }
+        const findLyric = (time, index) => {
+            const advanced = isAdvanced && doAdvanced
+            const lineTimes = advanced ? linesCounts.map(i => times[i]) : times
+            const i = this.findTimeIndex(time, lineTimes)
+            const text = i < 0 ? undefined : advanced ? lines[i].join('') : lines[i]
+            return index ? [text, i] : [text]
         }
         function findExactLyric(time, index) {
             const i = times.indexOf(time);
@@ -605,22 +609,23 @@ class Lyrica {
         }
     }
 
-    searchTime(lyric, index) {
+    searchTime(lyric, includeIndexes = false) {
         const { times, lines, linesCounts } = this
         const { isAdvanced, doAdvanced } = this.options
-        let matchedTimes = [];
-        let matchedTimesIndexes = [];
-        for (const i in lines) {
-            const index = isAdvanced && doAdvanced ? linesCounts[i] : i;
-            const wanted = isAdvanced && doAdvanced ? String(lines[i].join('')) : lines[i];
+        const advanced = isAdvanced && doAdvanced
+        const matchedTimes = [];
+        const matchedTimeIndexes = [];
+        for (let i = 0; i < lines.length; i++) {
+            const timeIndex = advanced ? linesCounts[i] : i;
+            const wanted = advanced ? lines[i].join('') : lines[i];
 
             if (wanted === lyric) {
-                matchedTimes.push(times[index]);
-                matchedTimesIndexes.push(index);
+                matchedTimes.push(times[timeIndex]);
+                matchedTimeIndexes.push(timeIndex);
             }
         }
 
-        return index ? [matchedTimes, matchedTimesIndexes] : [matchedTimes]
+        return includeIndexes === true ? [matchedTimes, matchedTimeIndexes] : [matchedTimes]
     }
 
     getCurrent() {
